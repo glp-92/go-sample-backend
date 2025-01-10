@@ -37,6 +37,14 @@ CREATE TABLE posts (
 );
 ```
 
+```sql
+CREATE TABLE users (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+```
+
 ## New dependencies
 
 To use dependencies, as for example `google uuid` must update go.mod by using following command
@@ -44,4 +52,5 @@ To use dependencies, as for example `google uuid` must update go.mod by using fo
 ```bash
 go get github.com/google/uuid
 go get github.com/joho/godotenv
+go get golang.org/x/crypto
 ```
