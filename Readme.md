@@ -4,6 +4,8 @@
 
 If new to Golang, follow [tutorial to setup and run GO provided on main doc page](https://go.dev/learn/). It's documentation is fine
 
+Once installed, add `export PATH=$PATH:/usr/local/go/bin` in the end of `~/.profile` and reboot.
+
 For a new project
 
 ```bash
