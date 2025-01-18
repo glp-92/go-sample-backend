@@ -55,4 +55,6 @@ To use dependencies, as for example `google uuid` must update go.mod by using fo
 go get github.com/google/uuid
 go get github.com/joho/godotenv
 go get golang.org/x/crypto
+go get github.com/go-sql-driver/mysql
+go get -u github.com/golang-jwt/jwt/v5
 ```

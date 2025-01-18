@@ -23,8 +23,8 @@ func main() {
 		User:                 cfg.DB.Username,
 		Passwd:               cfg.DB.Password,
 		Net:                  "tcp",
-		Addr:                 "127.0.0.1:3306",
-		DBName:               "recordings",
+		Addr:                 cfg.DB.Address,
+		DBName:               cfg.DB.DBName,
 		AllowNativePasswords: true,
 		ParseTime:            true,
 	}

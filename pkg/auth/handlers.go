@@ -2,11 +2,12 @@ package auth
 
 import (
 	"encoding/json"
+	"fullstackcms/backend/pkg/auth/dto"
 	"net/http"
 )
 
 func CreateUserHandler(service *UserService, w http.ResponseWriter, r *http.Request) {
-	var request RegisterRequest
+	var request dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		return
@@ -20,7 +21,7 @@ func CreateUserHandler(service *UserService, w http.ResponseWriter, r *http.Requ
 }
 
 func LoginUserHandler(service *UserService, w http.ResponseWriter, r *http.Request) {
-	var request LoginRequest
+	var request dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
@@ -30,5 +31,10 @@ func LoginUserHandler(service *UserService, w http.ResponseWriter, r *http.Reque
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	tokens, err := service.CreateToken(request)
+	if err != nil {
+		http.Error(w, "Error en login", http.StatusUnauthorized)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tokens)
 }

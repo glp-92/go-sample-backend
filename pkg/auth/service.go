@@ -2,7 +2,10 @@ package auth
 
 import (
 	"errors"
+	"fullstackcms/backend/pkg/auth/dto"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,7 +18,9 @@ func NewUserService(repo UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) CreateUser(request RegisterRequest) error {
+var secretKey = []byte("secret-key")
+
+func (s *UserService) CreateUser(request dto.RegisterRequest) error {
 	encodedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -28,7 +33,7 @@ func (s *UserService) CreateUser(request RegisterRequest) error {
 	return s.repo.Save(newUser)
 }
 
-func (s *UserService) ValidateUser(request LoginRequest) error {
+func (s *UserService) ValidateUser(request dto.LoginRequest) error {
 	user, err := s.repo.GetUserDetails(request.Username)
 	if err != nil {
 		return err
@@ -43,3 +48,22 @@ func (s *UserService) ValidateUser(request LoginRequest) error {
 	}
 	return nil
 }
+
+func (s *UserService) CreateToken(request dto.LoginRequest) (dto.LoginResponse, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+		"issued":  jwt.NewNumericDate(time.Now()),
+		"sub":     request.Username,
+	})
+	ss, err := token.SignedString(secretKey)
+	if err != nil {
+		return dto.LoginResponse{}, err
+	}
+	response := dto.LoginResponse{
+		AccessToken:  ss,
+		RefreshToken: "",
+	}
+	return response, err
+}
+
+func (s *UserService) ValidateToken() {}

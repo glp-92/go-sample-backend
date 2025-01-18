@@ -15,6 +15,8 @@ type Config struct {
 type MySQLConfig struct {
 	Username string
 	Password string
+	Address  string
+	DBName   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -30,6 +32,8 @@ func LoadConfig() (*Config, error) {
 		DB: MySQLConfig{
 			Username: os.Getenv("DBUSER"),
 			Password: os.Getenv("DBPWD"),
+			Address:  os.Getenv("DBADDR"),
+			DBName:   os.Getenv("DBNAME"),
 		},
 	}
 	return cfg, nil

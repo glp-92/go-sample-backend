@@ -18,7 +18,6 @@ func CreatePostHandler(service *PostService, w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Error al crear el post", http.StatusBadRequest)
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 }
 
