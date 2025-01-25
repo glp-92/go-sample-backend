@@ -37,6 +37,8 @@ func LoginUserHandler(service *AuthService, w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		http.Error(w, "Token Err", http.StatusUnauthorized)
 	}
+	cookie1 := &http.Cookie{Name: "refresh_token", Value: tokens.RefreshToken, HttpOnly: true}
+	http.SetCookie(w, cookie1)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tokens)
 }
