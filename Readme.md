@@ -14,46 +14,41 @@ cd projectName
 go mod init projectName
 ```
 
-Setup SQLite database
+### SQLite
 
 ```bash
 sudo apt install sqlite3
 ```
-
 Create database
 
 ```bash
 sqlite3 recordings.db
+sqlite3 .read db_entrypoint.sql
 ```
 
-It will open DB bash, so create a table
+### MySQL
 
-```sql
-CREATE TABLE posts (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL UNIQUE,
-    excerpt TEXT,
-    content TEXT,
-    date DATETIME NOT NULL
-);
+Install MySQL on system (Docker works fine too)
+
+```bash
+sudo apt install mysql-server -y
+sudo systemctl enable mysql.service
 ```
 
-```sql
-CREATE TABLE users (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
+Change root usr
+```bash
+sudo mysql
 ```
 
 ```sql
-CREATE TABLE tokens (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    user_id INT NOT NULL,
-    refresh_token TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'rootpwd';
+CREATE USER 'customuser'@'localhost' IDENTIFIED BY 'password'
+CREATE DATABASE db_name;'
+GRANT ALL PRIVILEGES ON db_name.* TO 'customuser'@'localhost';
+```
+
+```bash
+mysql -u customuser -p password db_name < db_entrypoint.sql
 ```
 
 ## New dependencies
@@ -61,9 +56,9 @@ CREATE TABLE tokens (
 To use dependencies, as for example `google uuid` must update go.mod by using following command
 
 ```bash
-go get github.com/google/uuid
-go get github.com/joho/godotenv
-go get golang.org/x/crypto
-go get github.com/go-sql-driver/mysql
+go get -u github.com/google/uuid
+go get -u github.com/joho/godotenv
+go get -u golang.org/x/crypto
+go get -u github.com/go-sql-driver/mysql
 go get -u github.com/golang-jwt/jwt/v5
 ```
