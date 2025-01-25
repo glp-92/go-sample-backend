@@ -22,8 +22,7 @@ sudo apt install sqlite3
 Create database
 
 ```bash
-sqlite3 recordings.db
-sqlite3 .read db_entrypoint.sql
+sqlite3 blogtest.db < db_entrypoint.sql
 ```
 
 ### MySQL
@@ -35,20 +34,8 @@ sudo apt install mysql-server -y
 sudo systemctl enable mysql.service
 ```
 
-Change root usr
 ```bash
-sudo mysql
-```
-
-```sql
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'rootpwd';
-CREATE USER 'customuser'@'localhost' IDENTIFIED BY 'password'
-CREATE DATABASE db_name;'
-GRANT ALL PRIVILEGES ON db_name.* TO 'customuser'@'localhost';
-```
-
-```bash
-mysql -u customuser -p password db_name < db_entrypoint.sql
+mysql -u root -p < db_entrypoint.sql
 ```
 
 ## New dependencies

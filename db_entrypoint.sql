@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS blogtest;
+USE blogtest;
+
 CREATE TABLE posts (
     id CHAR(36) NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -13,7 +16,7 @@ CREATE TABLE users (
 );
 CREATE TABLE tokens (
     id CHAR(36) NOT NULL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id CHAR(36) NOT NULL,
     refresh_token TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
