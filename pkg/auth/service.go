@@ -10,17 +10,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
+type AuthService struct {
 	repo AuthRepository
 }
 
-func NewUserService(repo AuthRepository) *UserService {
-	return &UserService{repo: repo}
+func NewAuthService(repo AuthRepository) *AuthService {
+	return &AuthService{repo: repo}
 }
 
 var secretKey = []byte("secret-key")
 
-func (s *UserService) CreateUser(request dto.RegisterRequest) error {
+func (s *AuthService) CreateUser(request dto.RegisterRequest) error {
 	encodedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (s *UserService) CreateUser(request dto.RegisterRequest) error {
 	return s.repo.SaveUser(newUser)
 }
 
-func (s *UserService) ValidateUser(request dto.LoginRequest) error {
+func (s *AuthService) ValidateUser(request dto.LoginRequest) error {
 	user, err := s.repo.GetUserDetails(request.Username)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (s *UserService) ValidateUser(request dto.LoginRequest) error {
 	return nil
 }
 
-func (s *UserService) CreateToken(request dto.LoginRequest, userAgent string) (dto.LoginResponse, error) {
+func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string) (dto.LoginResponse, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
@@ -75,4 +75,4 @@ func (s *UserService) CreateToken(request dto.LoginRequest, userAgent string) (d
 	return response, err
 }
 
-func (s *UserService) ValidateToken() {}
+func (s *AuthService) ValidateToken() {}

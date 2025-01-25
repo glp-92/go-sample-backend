@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func CreateUserHandler(service *UserService, w http.ResponseWriter, r *http.Request) {
+func CreateUserHandler(service *AuthService, w http.ResponseWriter, r *http.Request) {
 	var request dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "DecodeError", http.StatusBadRequest)
@@ -20,7 +20,7 @@ func CreateUserHandler(service *UserService, w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusCreated)
 }
 
-func LoginUserHandler(service *UserService, w http.ResponseWriter, r *http.Request) {
+func LoginUserHandler(service *AuthService, w http.ResponseWriter, r *http.Request) {
 	var request dto.LoginRequest
 	userAgent := r.Header.Get("User-Agent")
 
