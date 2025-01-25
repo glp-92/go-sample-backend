@@ -33,26 +33,26 @@ func (s *AuthService) CreateUser(request dto.RegisterRequest) error {
 	return s.repo.SaveUser(newUser)
 }
 
-func (s *AuthService) ValidateUser(request dto.LoginRequest) error {
+func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 	user, err := s.repo.GetUserDetails(request.Username)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if user == nil {
-		return errors.New("User not found Error")
+		return nil, errors.New("User not found Error")
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return user, nil
 }
 
-func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string) (dto.LoginResponse, error) {
+func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string, user *User) (dto.LoginResponse, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
-		"sub":     request.Username,
+		"sub":     user.Username,
 	})
 	signedAccessToken, err := accessToken.SignedString(secretKey)
 	if err != nil {
@@ -61,16 +61,25 @@ func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string) (d
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
-		"sub":     request.Username,
+		"sub":     user.Username,
 		"agent":   userAgent,
 	})
 	signedRefreshToken, err := refreshToken.SignedString(secretKey)
 	if err != nil {
 		return dto.LoginResponse{}, err
 	}
+	newRefreshToken := RefreshToken{
+		Id:           uuid.New(),
+		RefreshToken: signedRefreshToken,
+		UserId:       user.Id,
+	}
+	err = s.repo.SaveRefreshToken(newRefreshToken)
+	if err != nil {
+		return dto.LoginResponse{}, err
+	}
 	response := dto.LoginResponse{
 		AccessToken:  signedAccessToken,
-		RefreshToken: signedRefreshToken,
+		RefreshToken: newRefreshToken.RefreshToken,
 	}
 	return response, err
 }

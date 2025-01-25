@@ -50,7 +50,7 @@ func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error 
 	var count int
 	err := r.db.QueryRow("SELECT COUNT(*) FROM tokens WHERE user_id = ?", refreshToken.UserId).Scan(&count)
 	if err != nil {
-		return fmt.Errorf("error checking existing token: %v", err)
+		return fmt.Errorf("error searching token: %v", err)
 	}
 	if count > 0 {
 		_, err = r.db.Exec(`
@@ -64,9 +64,9 @@ func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error 
 		}
 	} else {
 		_, err = r.db.Exec(`
-			INSERT INTO tokens (id, refresh_token, user_id) 
-			VALUES (?, ?, ?, ?)`,
-			refreshToken.Id, refreshToken.RefreshToken, refreshToken.UserId,
+			INSERT INTO tokens (id, user_id, refresh_token) 
+			VALUES (?, ?, ?)`,
+			refreshToken.Id, refreshToken.UserId, refreshToken.RefreshToken,
 		)
 		if err != nil {
 			return fmt.Errorf("error inserting refresh token: %v", err)

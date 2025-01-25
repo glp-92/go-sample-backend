@@ -28,12 +28,12 @@ func LoginUserHandler(service *AuthService, w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Invalid Token", http.StatusUnauthorized)
 		return
 	}
-	err := service.ValidateUser(request)
+	user, err := service.ValidateUser(request)
 	if err != nil {
 		http.Error(w, "Invalid User", http.StatusUnauthorized)
 		return
 	}
-	tokens, err := service.CreateToken(request, userAgent)
+	tokens, err := service.CreateToken(request, userAgent, user)
 	if err != nil {
 		http.Error(w, "Token Err", http.StatusUnauthorized)
 	}
