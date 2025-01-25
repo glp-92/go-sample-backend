@@ -41,7 +41,6 @@ func (s *UserService) ValidateUser(request dto.LoginRequest) error {
 	if user == nil {
 		return errors.New("User not found Error")
 	}
-
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
 		return err
@@ -49,19 +48,29 @@ func (s *UserService) ValidateUser(request dto.LoginRequest) error {
 	return nil
 }
 
-func (s *UserService) CreateToken(request dto.LoginRequest) (dto.LoginResponse, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+func (s *UserService) CreateToken(request dto.LoginRequest, userAgent string) (dto.LoginResponse, error) {
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
 		"sub":     request.Username,
 	})
-	ss, err := token.SignedString(secretKey)
+	signedAccessToken, err := accessToken.SignedString(secretKey)
+	if err != nil {
+		return dto.LoginResponse{}, err
+	}
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"expires": jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
+		"issued":  jwt.NewNumericDate(time.Now()),
+		"sub":     request.Username,
+		"agent":   userAgent,
+	})
+	signedRefreshToken, err := refreshToken.SignedString(secretKey)
 	if err != nil {
 		return dto.LoginResponse{}, err
 	}
 	response := dto.LoginResponse{
-		AccessToken:  ss,
-		RefreshToken: "",
+		AccessToken:  signedAccessToken,
+		RefreshToken: signedRefreshToken,
 	}
 	return response, err
 }
