@@ -3,22 +3,24 @@ package auth
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
-type UserRepository interface {
-	Save(user User) error
+type AuthRepository interface {
+	SaveUser(user User) error
 	GetUserDetails(username string) (*User, error)
+	SaveRefreshToken(refreshToken RefreshToken) error
 }
 
-type MySQLUserRepository struct {
+type MySQLAuthRepository struct {
 	db *sql.DB
 }
 
-func NewMySQLUserRepository(db *sql.DB) UserRepository {
-	return &MySQLUserRepository{db: db}
+func NewMySQLAuthRepository(db *sql.DB) AuthRepository {
+	return &MySQLAuthRepository{db: db}
 }
 
-func (r *MySQLUserRepository) Save(user User) error {
+func (r *MySQLAuthRepository) SaveUser(user User) error {
 	query := `
 		INSERT INTO users (id, username, password)
 		VALUES (?, ?, ?)`
@@ -26,7 +28,7 @@ func (r *MySQLUserRepository) Save(user User) error {
 	return err
 }
 
-func (r *MySQLUserRepository) GetUserDetails(username string) (*User, error) {
+func (r *MySQLAuthRepository) GetUserDetails(username string) (*User, error) {
 	query := `
 		SELECT id, username, password 
 		FROM users
@@ -42,4 +44,33 @@ func (r *MySQLUserRepository) GetUserDetails(username string) (*User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error {
+	var count int
+	err := r.db.QueryRow("SELECT COUNT(*) FROM tokens WHERE user_id = ?", refreshToken.UserId).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("error checking existing token: %v", err)
+	}
+	if count > 0 {
+		_, err = r.db.Exec(`
+			UPDATE tokens 
+			SET refresh_token = ?
+			WHERE user_id = ?`,
+			refreshToken.RefreshToken, refreshToken.UserId,
+		)
+		if err != nil {
+			return fmt.Errorf("error updating refresh token: %v", err)
+		}
+	} else {
+		_, err = r.db.Exec(`
+			INSERT INTO tokens (id, refresh_token, user_id) 
+			VALUES (?, ?, ?, ?)`,
+			refreshToken.Id, refreshToken.RefreshToken, refreshToken.UserId,
+		)
+		if err != nil {
+			return fmt.Errorf("error inserting refresh token: %v", err)
+		}
+	}
+	return nil
 }

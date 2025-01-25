@@ -11,10 +11,10 @@ import (
 )
 
 type UserService struct {
-	repo UserRepository
+	repo AuthRepository
 }
 
-func NewUserService(repo UserRepository) *UserService {
+func NewUserService(repo AuthRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
@@ -30,7 +30,7 @@ func (s *UserService) CreateUser(request dto.RegisterRequest) error {
 		Username: request.Username,
 		Password: string(encodedPassword),
 	}
-	return s.repo.Save(newUser)
+	return s.repo.SaveUser(newUser)
 }
 
 func (s *UserService) ValidateUser(request dto.LoginRequest) error {

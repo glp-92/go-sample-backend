@@ -47,6 +47,15 @@ CREATE TABLE users (
 );
 ```
 
+```sql
+CREATE TABLE tokens (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    user_id INT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
 ## New dependencies
 
 To use dependencies, as for example `google uuid` must update go.mod by using following command

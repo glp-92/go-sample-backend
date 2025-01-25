@@ -7,3 +7,9 @@ type User struct {
 	Username string
 	Password string
 }
+
+type RefreshToken struct {
+	Id           uuid.UUID
+	RefreshToken string
+	UserId       uuid.UUID
+}
