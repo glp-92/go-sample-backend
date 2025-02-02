@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"fullstackcms/backend/pkg/auth/dto"
 	"net/http"
 )
@@ -33,12 +34,21 @@ func LoginUserHandler(service *AuthService, w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Invalid User", http.StatusUnauthorized)
 		return
 	}
-	tokens, err := service.CreateToken(request, userAgent, user)
+	tokens, err := service.CreateTokens(request, userAgent, user)
 	if err != nil {
 		http.Error(w, "Token Err", http.StatusUnauthorized)
 	}
-	cookie1 := &http.Cookie{Name: "refresh_token", Value: tokens.RefreshToken, HttpOnly: true}
-	http.SetCookie(w, cookie1)
+	refreshTokenCookie := &http.Cookie{Name: "refresh_token", Value: tokens.RefreshToken, HttpOnly: true}
+	http.SetCookie(w, refreshTokenCookie)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tokens)
+}
+
+func RefreshTokenHandler(service *AuthService, w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		http.Error(w, "Refresh Token Err", http.StatusUnauthorized)
+	}
+	fmt.Println(cookie.Value)
+	fmt.Fprint(w, "hola")
 }

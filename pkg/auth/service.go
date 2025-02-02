@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"fullstackcms/backend/pkg/auth/dto"
 	"time"
 
@@ -9,6 +10,19 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type AccessTokenClaims struct {
+	Foo     string           `json:"foo"`
+	Expires *jwt.NumericDate `json:"expires"`
+	Issued  *jwt.NumericDate `json:"issued"`
+	Subject string           `json:"sub"`
+	jwt.RegisteredClaims
+}
+
+type RefreshTokenClaims struct {
+	AccessTokenClaims
+	Agent string `json:"agent"`
+}
 
 type AuthService struct {
 	repo AuthRepository
@@ -48,7 +62,7 @@ func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 	return user, nil
 }
 
-func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string, user *User) (dto.LoginResponse, error) {
+func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, user *User) (dto.LoginResponse, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
@@ -58,11 +72,13 @@ func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string, us
 	if err != nil {
 		return dto.LoginResponse{}, err
 	}
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"expires": jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
-		"issued":  jwt.NewNumericDate(time.Now()),
-		"sub":     user.Username,
-		"agent":   userAgent,
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, RefreshTokenClaims{
+		AccessTokenClaims: AccessTokenClaims{
+			Expires: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
+			Issued:  jwt.NewNumericDate(time.Now()),
+			Subject: user.Username,
+		},
+		Agent: userAgent,
 	})
 	signedRefreshToken, err := refreshToken.SignedString(secretKey)
 	if err != nil {
@@ -84,4 +100,11 @@ func (s *AuthService) CreateToken(request dto.LoginRequest, userAgent string, us
 	return response, err
 }
 
-func (s *AuthService) ValidateToken() {}
+func (s *AuthService) RefreshToken(refreshToken string) {
+	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+	fmt.Println(token)
+	fmt.Println(err)
+	fmt.Printf("hola")
+}

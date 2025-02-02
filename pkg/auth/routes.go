@@ -14,4 +14,7 @@ func RegisterRoutes(db *sql.DB) {
 	http.HandleFunc("POST /auth/login", func(w http.ResponseWriter, r *http.Request) {
 		LoginUserHandler(service, w, r)
 	})
+	http.HandleFunc("POST /auth/refresh", func(w http.ResponseWriter, r *http.Request) {
+		RefreshTokenHandler(service, w, r)
+	})
 }
