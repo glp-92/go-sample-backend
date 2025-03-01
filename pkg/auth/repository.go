@@ -74,3 +74,13 @@ func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error 
 	}
 	return nil
 }
+
+func (r *MySQLAuthRepository) GetRefreshTokenFromSubject(subject string) (string, error) {
+	var refreshToken string
+	query := `
+		SELECT id, user_id, refresh_token
+		FROM tokens
+		JOIN users ON users.id = tokens.user_id
+		WHERE users.username = ?;`
+	fmt.Println((query))
+}

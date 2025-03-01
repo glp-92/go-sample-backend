@@ -12,7 +12,6 @@ import (
 )
 
 type AccessTokenClaims struct {
-	Foo     string           `json:"foo"`
 	Expires *jwt.NumericDate `json:"expires"`
 	Issued  *jwt.NumericDate `json:"issued"`
 	Subject string           `json:"sub"`
@@ -62,7 +61,7 @@ func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 	return user, nil
 }
 
-func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, user *User) (dto.LoginResponse, error) {
+func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, user *User) (string, string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
@@ -70,7 +69,7 @@ func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, u
 	})
 	signedAccessToken, err := accessToken.SignedString(secretKey)
 	if err != nil {
-		return dto.LoginResponse{}, err
+		return "", "", err
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, RefreshTokenClaims{
 		AccessTokenClaims: AccessTokenClaims{
@@ -82,7 +81,7 @@ func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, u
 	})
 	signedRefreshToken, err := refreshToken.SignedString(secretKey)
 	if err != nil {
-		return dto.LoginResponse{}, err
+		return "", "", err
 	}
 	newRefreshToken := RefreshToken{
 		Id:           uuid.New(),
@@ -91,20 +90,16 @@ func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, u
 	}
 	err = s.repo.SaveRefreshToken(newRefreshToken)
 	if err != nil {
-		return dto.LoginResponse{}, err
+		return "", "", err
 	}
-	response := dto.LoginResponse{
-		AccessToken:  signedAccessToken,
-		RefreshToken: newRefreshToken.RefreshToken,
-	}
-	return response, err
+	return signedAccessToken, newRefreshToken.RefreshToken, err
 }
 
-func (s *AuthService) RefreshToken(refreshToken string) {
+func (s *AuthService) RefreshToken(refreshToken string) error {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
-	fmt.Println(token)
-	fmt.Println(err)
-	fmt.Printf("hola")
+	claims := token.Claims.(*RefreshTokenClaims)
+	fmt.Println(claims.Subject)
+	return err
 }
