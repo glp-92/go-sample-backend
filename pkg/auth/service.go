@@ -99,7 +99,11 @@ func (s *AuthService) RefreshToken(refreshToken string) error {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
+	if err != nil {
+		return err
+	}
 	claims := token.Claims.(*RefreshTokenClaims)
-	fmt.Println(claims.Subject)
+	storedRefreshToken, err := s.repo.GetRefreshTokenFromSubject(claims.Subject)
+	fmt.Println(storedRefreshToken.RefreshToken)
 	return err
 }

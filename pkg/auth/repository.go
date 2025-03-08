@@ -10,6 +10,7 @@ type AuthRepository interface {
 	SaveUser(user User) error
 	GetUserDetails(username string) (*User, error)
 	SaveRefreshToken(refreshToken RefreshToken) error
+	GetRefreshTokenFromSubject(username string) (RefreshToken, error)
 }
 
 type MySQLAuthRepository struct {
@@ -75,12 +76,13 @@ func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error 
 	return nil
 }
 
-func (r *MySQLAuthRepository) GetRefreshTokenFromSubject(subject string) (string, error) {
-	var refreshToken string
-	query := `
+func (r *MySQLAuthRepository) GetRefreshTokenFromSubject(username string) (RefreshToken, error) {
+	row := r.db.QueryRow(`
 		SELECT id, user_id, refresh_token
 		FROM tokens
 		JOIN users ON users.id = tokens.user_id
-		WHERE users.username = ?;`
-	fmt.Println((query))
+		WHERE users.username = ?;`, username)
+	var refreshToken RefreshToken
+	err := row.Scan(&refreshToken.Id, &refreshToken.UserId, &refreshToken.RefreshToken)
+	return refreshToken, err
 }
