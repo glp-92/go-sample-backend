@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"fullstackcms/backend/pkg/auth/dto"
 	"time"
 
@@ -61,7 +60,7 @@ func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 	return user, nil
 }
 
-func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, user *User) (string, string, error) {
+func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
 		"issued":  jwt.NewNumericDate(time.Now()),
@@ -95,15 +94,32 @@ func (s *AuthService) CreateTokens(request dto.LoginRequest, userAgent string, u
 	return signedAccessToken, newRefreshToken.RefreshToken, err
 }
 
-func (s *AuthService) RefreshToken(refreshToken string) error {
+func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (string, string, error) {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	claims := token.Claims.(*RefreshTokenClaims)
+	if claims.Agent != userAgent {
+		return "", "", errors.New("invalid user agent")
+	}
 	storedRefreshToken, err := s.repo.GetRefreshTokenFromSubject(claims.Subject)
-	fmt.Println(storedRefreshToken.RefreshToken)
-	return err
+	if err != nil {
+		return "", "", err
+	}
+	if storedRefreshToken.RefreshToken != refreshToken {
+		return "", "", errors.New("invalid refresh token")
+	}
+	user, err := s.repo.GetUserDetails(claims.Subject)
+	if err != nil {
+		return "", "", err
+	}
+	var accessToken string
+	accessToken, refreshToken, err = s.CreateTokens(userAgent, user)
+	if err != nil {
+		return "", "", err
+	}
+	return accessToken, refreshToken, err
 }
