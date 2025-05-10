@@ -50,13 +50,13 @@ func RefreshTokenHandler(service *AuthService, w http.ResponseWriter, r *http.Re
 	cookie, err := r.Cookie("refresh_token")
 	userAgent := r.Header.Get("User-Agent")
 	if err != nil {
-		http.Error(w, "Refresh Token Err", http.StatusUnauthorized)
+		http.Error(w, "Refresh Token Read Err", http.StatusUnauthorized)
 	}
 	var accessToken string
 	var refreshToken string
 	accessToken, refreshToken, err = service.RefreshToken(userAgent, cookie.Value)
 	if err != nil {
-		http.Error(w, "Refresh Token Err", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 	}
 	refreshTokenCookie := &http.Cookie{Name: "refresh_token", Value: refreshToken, HttpOnly: true}
 	http.SetCookie(w, refreshTokenCookie)

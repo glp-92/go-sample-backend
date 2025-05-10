@@ -6,6 +6,8 @@ import (
 	"fmt"
 )
 
+var ErrUserNotFound = errors.New("user not found")
+
 type AuthRepository interface {
 	SaveUser(user User) error
 	GetUserDetails(username string) (*User, error)
@@ -22,11 +24,18 @@ func NewMySQLAuthRepository(db *sql.DB) AuthRepository {
 }
 
 func (r *MySQLAuthRepository) SaveUser(user User) error {
+	if user.Username == "" || user.Password == "" {
+		return errors.New("user fields cannot be empty")
+	}
 	query := `
 		INSERT INTO users (id, username, password)
-		VALUES (?, ?, ?)`
+		VALUES (?, ?, ?)
+	`
 	_, err := r.db.Exec(query, user.Id, user.Username, user.Password)
-	return err
+	if err != nil {
+		return fmt.Errorf("error inserting user: %w", err)
+	}
+	return nil
 }
 
 func (r *MySQLAuthRepository) GetUserDetails(username string) (*User, error) {
@@ -39,49 +48,36 @@ func (r *MySQLAuthRepository) GetUserDetails(username string) (*User, error) {
 	var user User
 	err := row.Scan(&user.Id, &user.Username, &user.Password)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		return nil, ErrUserNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error querying user: %w", err)
 	}
 	return &user, nil
 }
 
 func (r *MySQLAuthRepository) SaveRefreshToken(refreshToken RefreshToken) error {
-	var count int
-	err := r.db.QueryRow("SELECT COUNT(*) FROM tokens WHERE user_id = ?", refreshToken.UserId).Scan(&count)
+	query := `
+		INSERT INTO tokens (id, user_id, refresh_token)
+		VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+			refresh_token = VALUES(refresh_token)
+	`
+	_, err := r.db.Exec(query, refreshToken.Id, refreshToken.UserId, refreshToken.RefreshToken)
 	if err != nil {
-		return fmt.Errorf("error searching token: %v", err)
-	}
-	if count > 0 {
-		_, err = r.db.Exec(`
-			UPDATE tokens 
-			SET refresh_token = ?
-			WHERE user_id = ?`,
-			refreshToken.RefreshToken, refreshToken.UserId,
-		)
-		if err != nil {
-			return fmt.Errorf("error updating refresh token: %v", err)
-		}
-	} else {
-		_, err = r.db.Exec(`
-			INSERT INTO tokens (id, user_id, refresh_token) 
-			VALUES (?, ?, ?)`,
-			refreshToken.Id, refreshToken.UserId, refreshToken.RefreshToken,
-		)
-		if err != nil {
-			return fmt.Errorf("error inserting refresh token: %v", err)
-		}
+		return fmt.Errorf("error saving refresh token: %w", err)
 	}
 	return nil
 }
 
 func (r *MySQLAuthRepository) GetRefreshTokenFromSubject(username string) (RefreshToken, error) {
-	row := r.db.QueryRow(`
+	query := `
 		SELECT tokens.id, tokens.user_id, tokens.refresh_token
 		FROM tokens
 		JOIN users ON users.id = tokens.user_id
-		WHERE users.username = ?;`, username)
+		WHERE users.username = ?
+	`
+	row := r.db.QueryRow(query, username)
 	var refreshToken RefreshToken
 	err := row.Scan(&refreshToken.Id, &refreshToken.UserId, &refreshToken.RefreshToken)
 	return refreshToken, err
