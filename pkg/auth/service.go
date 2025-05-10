@@ -97,7 +97,7 @@ func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string
 func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (string, string, error) {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
 		return "", "", err
 	}
@@ -122,4 +122,37 @@ func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (strin
 		return "", "", err
 	}
 	return accessToken, refreshToken, err
+}
+
+func (s *AuthService) ValidateTokenFromUser(accessToken string) (*User, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil {
+		return nil, err
+	}
+	claims, ok := token.Claims.(*AccessTokenClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token claims")
+	}
+	user, err := s.repo.GetUserDetails(claims.Subject)
+	return user, err
+}
+
+func (s *AuthService) ValidateExpiredTokenFromUser(accessToken string) (*User, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+		return nil, err
+	}
+	if token == nil {
+		return nil, errors.New("invalid token")
+	}
+	claims, ok := token.Claims.(*AccessTokenClaims)
+	if !ok {
+		return nil, errors.New("invalid token claims")
+	}
+	user, err := s.repo.GetUserDetails(claims.Subject)
+	return user, err
 }

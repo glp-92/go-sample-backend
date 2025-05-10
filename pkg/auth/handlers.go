@@ -66,3 +66,7 @@ func RefreshTokenHandler(service *AuthService, w http.ResponseWriter, r *http.Re
 	}
 	json.NewEncoder(w).Encode(response)
 }
+
+func LogoutHandler(service *AuthService, w http.ResponseWriter, r *http.Request) {
+
+}

@@ -7,8 +7,9 @@ import (
 	"fullstackcms/backend/pkg/auth"
 )
 
-func SetupRouter(db *sql.DB) {
+func SetupRouter(db *sql.DB, authService *auth.AuthService) {
+	authMiddlewares := auth.NewAuthMiddlewares(authService)
 	post.RegisterRoutes(db)
 	user.RegisterRoutes(db)
-	auth.RegisterRoutes(db)
+	auth.RegisterRoutes(db, authService, authMiddlewares)
 }
