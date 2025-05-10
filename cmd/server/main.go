@@ -8,6 +8,7 @@ import (
 
 	"fullstackcms/backend/configs"
 	"fullstackcms/backend/internal/router"
+	"fullstackcms/backend/pkg/middlewares"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -40,6 +41,6 @@ func main() {
 	fmt.Println("Connected!")
 
 	router.SetupRouter(db)
-	log.Println("Servidor escuchando en :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server listening port :8080")
+	log.Fatal(http.ListenAndServe(":8080", middlewares.Log(http.DefaultServeMux)))
 }
