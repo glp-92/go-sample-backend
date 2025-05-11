@@ -86,6 +86,7 @@ func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string
 		Id:           uuid.New(),
 		RefreshToken: signedRefreshToken,
 		UserId:       user.Id,
+		Revoked:      false,
 	}
 	err = s.repo.SaveRefreshToken(newRefreshToken)
 	if err != nil {
@@ -109,7 +110,7 @@ func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (strin
 	if err != nil {
 		return "", "", err
 	}
-	if storedRefreshToken.RefreshToken != refreshToken {
+	if (storedRefreshToken.Revoked) || (storedRefreshToken.RefreshToken != refreshToken) {
 		return "", "", errors.New("invalid refresh token")
 	}
 	user, err := s.repo.GetUserDetails(claims.Subject)
@@ -155,4 +156,9 @@ func (s *AuthService) ValidateExpiredTokenFromUser(accessToken string) (*User, e
 	}
 	user, err := s.repo.GetUserDetails(claims.Subject)
 	return user, err
+}
+
+func (s *AuthService) Logout(userId uuid.UUID) error {
+	err := s.repo.RevokeRefreshToken(userId)
+	return err
 }

@@ -11,5 +11,6 @@ type User struct {
 type RefreshToken struct {
 	Id           uuid.UUID
 	RefreshToken string
+	Revoked      bool
 	UserId       uuid.UUID
 }

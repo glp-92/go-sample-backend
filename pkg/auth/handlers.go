@@ -68,5 +68,14 @@ func RefreshTokenHandler(service *AuthService, w http.ResponseWriter, r *http.Re
 }
 
 func LogoutHandler(service *AuthService, w http.ResponseWriter, r *http.Request) {
-
+	user, ok := r.Context().Value(userContextKey).(*User)
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	err := service.Logout(user.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

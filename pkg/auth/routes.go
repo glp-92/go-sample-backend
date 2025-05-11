@@ -15,4 +15,7 @@ func RegisterRoutes(db *sql.DB, service *AuthService, authMiddlewares *AuthMiddl
 	http.Handle("POST /auth/refresh", authMiddlewares.Expired(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		RefreshTokenHandler(service, w, r)
 	})))
+	http.Handle("POST /auth/logout", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		LogoutHandler(service, w, r)
+	})))
 }

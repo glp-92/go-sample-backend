@@ -18,5 +18,6 @@ CREATE TABLE tokens (
     id CHAR(36) NOT NULL PRIMARY KEY,
     user_id CHAR(36) NOT NULL UNIQUE,
     refresh_token TEXT NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT false,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
