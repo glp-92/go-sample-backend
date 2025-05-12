@@ -7,17 +7,24 @@ import (
 )
 
 type CreatePostRequest struct {
-	Title   string
-	Slug    string
-	Excerpt string
-	Content string
+	Title         string `json:"title"`
+	Slug          string `json:"slug"`
+	Excerpt       string `json:"excerpt"`
+	Content       string `json:"content"`
+	FeaturedImage string `json:"featuredImage"`
+}
+
+type CreatePostResponse struct {
+	PostID string `json:"postId"`
 }
 
 type PostDetailsResponse struct {
-	Id      uuid.UUID
-	Title   string
-	Slug    string
-	Excerpt string
-	Content string
-	Date    time.Time
+	Id            uuid.UUID `json:"id"`
+	Title         string    `json:"title"`
+	Slug          string    `json:"slug"`
+	Excerpt       string    `json:"excerpt"`
+	Content       string    `json:"content"`
+	FeaturedImage string    `json:"featuredImage"`
+	UserId        uuid.UUID `json:"userId"`
+	Date          time.Time `json:"date"`
 }

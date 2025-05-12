@@ -18,6 +18,11 @@ func NewAuthMiddlewares(authService *AuthService) *AuthMiddlewares {
 	return &AuthMiddlewares{authService: authService}
 }
 
+func GetUser(ctx context.Context) (*User, bool) {
+	user, ok := ctx.Value(userContextKey).(*User)
+	return user, ok
+}
+
 func (m *AuthMiddlewares) Authenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
 		authHeader := req.Header.Get("Authorization")
@@ -43,7 +48,6 @@ func (m *AuthMiddlewares) Authenticated(next http.Handler) http.Handler {
 
 func (m *AuthMiddlewares) Expired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
-		// code here
 		authHeader := req.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(writer, "Unauthorized", http.StatusUnauthorized)

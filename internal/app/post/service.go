@@ -1,6 +1,7 @@
 package post
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,16 +15,20 @@ func NewPostService(repo PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
-func (s *PostService) CreatePost(request CreatePostRequest) error {
+func (s *PostService) CreatePost(request CreatePostRequest, userId uuid.UUID) (Post, error) {
+	fmt.Println(userId)
 	newPost := Post{
-		Id:      uuid.New(),
-		Title:   request.Title,
-		Slug:    request.Slug,
-		Excerpt: request.Excerpt,
-		Content: request.Content,
-		Date:    time.Now(),
+		Id:            uuid.New(),
+		Title:         request.Title,
+		Slug:          request.Slug,
+		Excerpt:       request.Excerpt,
+		Content:       request.Content,
+		FeaturedImage: request.FeaturedImage,
+		UserId:        userId,
+		Date:          time.Now(),
 	}
-	return s.repo.Save(newPost)
+	err := s.repo.Save(newPost)
+	return newPost, err
 }
 
 func (s *PostService) FindPostById(id uuid.UUID) (PostDetailsResponse, error) {
@@ -40,6 +45,7 @@ func (s *PostService) FindPostById(id uuid.UUID) (PostDetailsResponse, error) {
 		Slug:    post.Slug,
 		Excerpt: post.Excerpt,
 		Content: post.Content,
+		UserId:  post.UserId,
 		Date:    post.Date,
 	}
 	return response, nil
