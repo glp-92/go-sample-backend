@@ -22,21 +22,21 @@ func NewMySQLThemeRepository(db *sql.DB) ThemeRepository {
 
 func (r *MySQLThemeRepository) Save(theme Theme) error {
 	query := `
-		INSERT INTO themes (id, name, slug)
-		VALUES (?, ?, ?)`
-	_, err := r.db.Exec(query, theme.Id, theme.Name, theme.Slug)
+		INSERT INTO themes (id, name, slug, excerpt, featuredImage)
+		VALUES (?, ?, ?, ?, ?)`
+	_, err := r.db.Exec(query, theme.Id, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage)
 	return err
 }
 
 func (r *MySQLThemeRepository) FindByID(id uuid.UUID) (*Theme, error) {
 	query := `
-        SELECT id, name, slug
+        SELECT id, name, slug, excerpt, featuredImage
         FROM themes
         WHERE id = ?`
 	row := r.db.QueryRow(query, id)
 
 	var theme Theme
-	err := row.Scan(&theme.Id, &theme.Name, &theme.Slug)
+	err := row.Scan(&theme.Id, &theme.Name, &theme.Slug, &theme.Excerpt, &theme.FeaturedImage)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}

@@ -1,8 +1,6 @@
 package category
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 )
 
@@ -15,7 +13,6 @@ func NewCategoryService(repo CategoryRepository) *CategoryService {
 }
 
 func (s *CategoryService) CreateCategory(request CreateCategoryRequest, userId uuid.UUID) (Category, error) {
-	fmt.Println(userId)
 	newCategory := Category{
 		Id:   uuid.New(),
 		Name: request.Name,

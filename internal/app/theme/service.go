@@ -1,8 +1,6 @@
 package theme
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 )
 
@@ -15,7 +13,6 @@ func NewThemeService(repo ThemeRepository) *ThemeService {
 }
 
 func (s *ThemeService) CreateTheme(request CreateThemeRequest, userId uuid.UUID) (Theme, error) {
-	fmt.Println(userId)
 	newTheme := Theme{
 		Id:            uuid.New(),
 		Name:          request.Name,

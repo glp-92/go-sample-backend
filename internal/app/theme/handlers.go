@@ -41,7 +41,7 @@ func GetThemeByIDHandler(service *ThemeService, w http.ResponseWriter, r *http.R
 	}
 	theme, err := service.FindThemeById(id)
 	if err != nil {
-		http.Error(w, "Error al buscar la tema", http.StatusNotFound)
+		http.Error(w, "Error al buscar el tema", http.StatusNotFound)
 		return
 	}
 	if theme.Id == uuid.Nil {

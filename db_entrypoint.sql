@@ -25,9 +25,9 @@ CREATE TABLE categories (
 CREATE TABLE themes (
     id CHAR(36) NOT NULL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    featuredImage VARCHAR(100),
     slug VARCHAR(100) NOT NULL UNIQUE,
-    excerpt VARCHAR(255) NOT NULL
+    excerpt VARCHAR(255) NOT NULL,
+    featured_image VARCHAR(100),
 );
 CREATE TABLE posts_themes (
     post_id CHAR(36) NOT NULL,
