@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"fullstackcms/backend/pkg/auth/dto"
 	"time"
 
@@ -129,7 +128,6 @@ func (s *AuthService) ValidateTokenFromUser(accessToken string) (*User, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
-	fmt.Println(token.Claims.GetExpirationTime())
 	if err != nil {
 		return nil, err
 	}
