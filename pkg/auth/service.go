@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"fullstackcms/backend/pkg/auth/dto"
 	"time"
 
@@ -11,14 +12,11 @@ import (
 )
 
 type AccessTokenClaims struct {
-	Expires *jwt.NumericDate `json:"expires"`
-	Issued  *jwt.NumericDate `json:"issued"`
-	Subject string           `json:"sub"`
 	jwt.RegisteredClaims
 }
 
 type RefreshTokenClaims struct {
-	AccessTokenClaims
+	jwt.RegisteredClaims
 	Agent string `json:"agent"`
 }
 
@@ -61,20 +59,22 @@ func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 }
 
 func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string, error) {
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"expires": jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
-		"issued":  jwt.NewNumericDate(time.Now()),
-		"sub":     user.Username,
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, AccessTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
+			Subject:   user.Username,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	})
 	signedAccessToken, err := accessToken.SignedString(secretKey)
 	if err != nil {
 		return "", "", err
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, RefreshTokenClaims{
-		AccessTokenClaims: AccessTokenClaims{
-			Expires: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
-			Issued:  jwt.NewNumericDate(time.Now()),
-			Subject: user.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
+			Subject:   user.Username,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 		Agent: userAgent,
 	})
@@ -129,6 +129,7 @@ func (s *AuthService) ValidateTokenFromUser(accessToken string) (*User, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
+	fmt.Println(token.Claims.GetExpirationTime())
 	if err != nil {
 		return nil, err
 	}
