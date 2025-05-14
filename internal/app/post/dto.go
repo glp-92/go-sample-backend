@@ -7,13 +7,13 @@ import (
 )
 
 type CreatePostRequest struct {
-	Title         string   `json:"title"`
-	Slug          string   `json:"slug"`
-	Excerpt       string   `json:"excerpt"`
-	Content       string   `json:"content"`
-	FeaturedImage string   `json:"featuredImage"`
-	CategoryIds   []string `json:"categoryIds"`
-	ThemeIds      []string `json:"themeIds"`
+	Title         string      `json:"title"`
+	Slug          string      `json:"slug"`
+	Excerpt       string      `json:"excerpt"`
+	Content       string      `json:"content"`
+	FeaturedImage string      `json:"featuredImage"`
+	CategoryIds   []uuid.UUID `json:"categoryIds"`
+	ThemeIds      []uuid.UUID `json:"themeIds"`
 }
 
 type CreatePostResponse struct {
