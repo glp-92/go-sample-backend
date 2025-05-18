@@ -4,12 +4,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DB MySQLConfig
+	DB   MySQLConfig
+	Auth AuthConfig
 }
 
 type MySQLConfig struct {
@@ -17,6 +19,20 @@ type MySQLConfig struct {
 	Password string
 	Address  string
 	DBName   string
+}
+
+type AuthConfig struct {
+	JWTSignKey                []byte
+	JWTAccessTokenExpiration  int
+	JWTRefreshTokenExpiration int
+}
+
+func ToInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatalf("Invalid number on reading exp time: %s", s)
+	}
+	return i
 }
 
 func LoadConfig() (*Config, error) {
@@ -34,6 +50,11 @@ func LoadConfig() (*Config, error) {
 			Password: os.Getenv("DBPWD"),
 			Address:  os.Getenv("DBADDR"),
 			DBName:   os.Getenv("DBNAME"),
+		},
+		Auth: AuthConfig{
+			JWTSignKey:                []byte(os.Getenv("JWTSIGNKEY")),
+			JWTAccessTokenExpiration:  ToInt(os.Getenv("JWTACCESSTOKENEXPIRATION")),
+			JWTRefreshTokenExpiration: ToInt(os.Getenv("JWTREFRESHTOKENEXPIRATION")),
 		},
 	}
 	return cfg, nil

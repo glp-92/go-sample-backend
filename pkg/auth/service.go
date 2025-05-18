@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fullstackcms/backend/configs"
 	"fullstackcms/backend/pkg/auth/dto"
 	"time"
 
@@ -20,14 +21,13 @@ type RefreshTokenClaims struct {
 }
 
 type AuthService struct {
-	repo AuthRepository
+	repo    AuthRepository
+	authCfg configs.AuthConfig
 }
 
-func NewAuthService(repo AuthRepository) *AuthService {
-	return &AuthService{repo: repo}
+func NewAuthService(repo AuthRepository, authCfg configs.AuthConfig) *AuthService {
+	return &AuthService{repo: repo, authCfg: authCfg}
 }
-
-var secretKey = []byte("secret-key")
 
 func (s *AuthService) CreateUser(request dto.RegisterRequest) error {
 	encodedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -60,24 +60,24 @@ func (s *AuthService) ValidateUser(request dto.LoginRequest) (*User, error) {
 func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, AccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(s.authCfg.JWTAccessTokenExpiration) * time.Minute)),
 			Subject:   user.Username,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	})
-	signedAccessToken, err := accessToken.SignedString(secretKey)
+	signedAccessToken, err := accessToken.SignedString(s.authCfg.JWTSignKey)
 	if err != nil {
 		return "", "", err
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, RefreshTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(s.authCfg.JWTRefreshTokenExpiration) * time.Minute)),
 			Subject:   user.Username,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 		Agent: userAgent,
 	})
-	signedRefreshToken, err := refreshToken.SignedString(secretKey)
+	signedRefreshToken, err := refreshToken.SignedString(s.authCfg.JWTSignKey)
 	if err != nil {
 		return "", "", err
 	}
@@ -96,7 +96,7 @@ func (s *AuthService) CreateTokens(userAgent string, user *User) (string, string
 
 func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (string, string, error) {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return s.authCfg.JWTSignKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
 		return "", "", err
@@ -126,7 +126,7 @@ func (s *AuthService) RefreshToken(userAgent string, refreshToken string) (strin
 
 func (s *AuthService) ValidateTokenFromUser(accessToken string) (*User, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return s.authCfg.JWTSignKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (s *AuthService) ValidateTokenFromUser(accessToken string) (*User, error) {
 
 func (s *AuthService) ValidateExpiredTokenFromUser(accessToken string) (*User, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &AccessTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return s.authCfg.JWTSignKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
 		return nil, err

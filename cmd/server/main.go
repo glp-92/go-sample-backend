@@ -42,7 +42,7 @@ func main() {
 	fmt.Println("Connected!")
 
 	authRepo := auth.NewMySQLAuthRepository(db)
-	authService := auth.NewAuthService(authRepo)
+	authService := auth.NewAuthService(authRepo, cfg.Auth)
 
 	router.SetupRouter(db, authService)
 	log.Println("Server listening port :8080")

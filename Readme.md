@@ -38,6 +38,14 @@ sudo systemctl enable mysql.service
 mysql -u root -p < db_entrypoint.sql
 ```
 
+### JWT
+
+Generate sign key for jwt
+
+```bash
+openssl rand -hex 32
+```
+
 ## New dependencies
 
 To use dependencies, as for example `google uuid` must update go.mod by using following command
