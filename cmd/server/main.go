@@ -45,6 +45,6 @@ func main() {
 	authService := auth.NewAuthService(authRepo, cfg.Auth)
 
 	router.SetupRouter(db, authService)
-	log.Println("Server listening port :8080")
-	log.Fatal(http.ListenAndServe(":8080", middlewares.Log(http.DefaultServeMux)))
+	log.Printf("Server listening port :%s", cfg.API.APIPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", cfg.API.APIPort), middlewares.Log(http.DefaultServeMux)))
 }

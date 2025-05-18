@@ -12,6 +12,7 @@ import (
 type Config struct {
 	DB   MySQLConfig
 	Auth AuthConfig
+	API  APIConfig
 }
 
 type MySQLConfig struct {
@@ -25,6 +26,10 @@ type AuthConfig struct {
 	JWTSignKey                []byte
 	JWTAccessTokenExpiration  int
 	JWTRefreshTokenExpiration int
+}
+
+type APIConfig struct {
+	APIPort string
 }
 
 func ToInt(s string) int {
@@ -55,6 +60,9 @@ func LoadConfig() (*Config, error) {
 			JWTSignKey:                []byte(os.Getenv("JWTSIGNKEY")),
 			JWTAccessTokenExpiration:  ToInt(os.Getenv("JWTACCESSTOKENEXPIRATION")),
 			JWTRefreshTokenExpiration: ToInt(os.Getenv("JWTREFRESHTOKENEXPIRATION")),
+		},
+		API: APIConfig{
+			APIPort: os.Getenv("API_PORT"),
 		},
 	}
 	return cfg, nil
