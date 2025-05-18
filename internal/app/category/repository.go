@@ -3,6 +3,7 @@ package category
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -52,6 +53,16 @@ func (r *MySQLCategoryRepository) DeleteById(id uuid.UUID) error {
         DELETE
         FROM categories
         WHERE id = ?`
-	_, err := r.db.Exec(query, id)
-	return err
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("category not found")
+	}
+	return nil
 }

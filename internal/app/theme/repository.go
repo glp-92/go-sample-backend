@@ -3,6 +3,7 @@ package theme
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -52,6 +53,16 @@ func (r *MySQLThemeRepository) DeleteById(id uuid.UUID) error {
         DELETE
         FROM themes
         WHERE id = ?`
-	_, err := r.db.Exec(query, id)
-	return err
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("theme not found")
+	}
+	return nil
 }
