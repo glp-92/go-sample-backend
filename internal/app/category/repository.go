@@ -10,6 +10,7 @@ import (
 type CategoryRepository interface {
 	Save(category Category) error
 	FindByID(id uuid.UUID) (*Category, error)
+	DeleteById(id uuid.UUID) error
 }
 
 type MySQLCategoryRepository struct {
@@ -44,4 +45,13 @@ func (r *MySQLCategoryRepository) FindByID(id uuid.UUID) (*Category, error) {
 		return nil, err
 	}
 	return &category, nil
+}
+
+func (r *MySQLCategoryRepository) DeleteById(id uuid.UUID) error {
+	query := `
+        DELETE
+        FROM categories
+        WHERE id = ?`
+	_, err := r.db.Exec(query, id)
+	return err
 }

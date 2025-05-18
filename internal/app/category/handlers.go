@@ -36,7 +36,7 @@ func GetCategoryByIDHandler(service *CategoryService, w http.ResponseWriter, r *
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "ID invalido", http.StatusBadRequest)
 		return
 	}
 	category, err := service.FindCategoryById(id)
@@ -50,4 +50,19 @@ func GetCategoryByIDHandler(service *CategoryService, w http.ResponseWriter, r *
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
+}
+
+func DeleteCategoryHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "ID invalido", http.StatusBadRequest)
+		return
+	}
+	err = service.DeleteCategoryById(id)
+	if err != nil {
+		http.Error(w, "Error al eliminar categoria", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

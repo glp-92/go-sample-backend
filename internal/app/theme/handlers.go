@@ -51,3 +51,18 @@ func GetThemeByIDHandler(service *ThemeService, w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(theme)
 }
+
+func DeleteThemeHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "ID invalido", http.StatusBadRequest)
+		return
+	}
+	err = service.DeleteThemeById(id)
+	if err != nil {
+		http.Error(w, "Error al eliminar tema", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

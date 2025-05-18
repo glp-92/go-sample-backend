@@ -10,6 +10,7 @@ import (
 type ThemeRepository interface {
 	Save(theme Theme) error
 	FindByID(id uuid.UUID) (*Theme, error)
+	DeleteById(id uuid.UUID) error
 }
 
 type MySQLThemeRepository struct {
@@ -44,4 +45,13 @@ func (r *MySQLThemeRepository) FindByID(id uuid.UUID) (*Theme, error) {
 		return nil, err
 	}
 	return &theme, nil
+}
+
+func (r *MySQLThemeRepository) DeleteById(id uuid.UUID) error {
+	query := `
+        DELETE
+        FROM themes
+        WHERE id = ?`
+	_, err := r.db.Exec(query, id)
+	return err
 }

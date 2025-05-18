@@ -16,4 +16,7 @@ func RegisterRoutes(db *sql.DB, authMiddlewares *auth.AuthMiddlewares) {
 	http.HandleFunc("GET /themes/{id}", func(w http.ResponseWriter, r *http.Request) {
 		GetThemeByIDHandler(service, w, r)
 	})
+	http.Handle("DELETE /themes/{id}", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		DeleteThemeHandler(service, w, r)
+	})))
 }

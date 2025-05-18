@@ -41,3 +41,8 @@ func (s *ThemeService) FindThemeById(id uuid.UUID) (ThemeDetailsResponse, error)
 	}
 	return response, nil
 }
+
+func (s *ThemeService) DeleteThemeById(id uuid.UUID) error {
+	err := s.repo.DeleteById(id)
+	return err
+}

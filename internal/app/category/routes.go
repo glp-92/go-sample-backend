@@ -16,4 +16,7 @@ func RegisterRoutes(db *sql.DB, authMiddlewares *auth.AuthMiddlewares) {
 	http.HandleFunc("GET /categories/{id}", func(w http.ResponseWriter, r *http.Request) {
 		GetCategoryByIDHandler(service, w, r)
 	})
+	http.Handle("DELETE /categories/{id}", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		DeleteCategoryHandler(service, w, r)
+	})))
 }

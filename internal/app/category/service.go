@@ -37,3 +37,8 @@ func (s *CategoryService) FindCategoryById(id uuid.UUID) (CategoryDetailsRespons
 	}
 	return response, nil
 }
+
+func (s *CategoryService) DeleteCategoryById(id uuid.UUID) error {
+	err := s.repo.DeleteById(id)
+	return err
+}
