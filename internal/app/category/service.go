@@ -12,7 +12,7 @@ func NewCategoryService(repo CategoryRepository) *CategoryService {
 	return &CategoryService{repo: repo}
 }
 
-func (s *CategoryService) CreateCategory(request CreateCategoryRequest, userId uuid.UUID) (Category, error) {
+func (s *CategoryService) CreateCategory(request CreateCategoryRequest) (Category, error) {
 	newCategory := Category{
 		Id:   uuid.New(),
 		Name: request.Name,
@@ -41,4 +41,14 @@ func (s *CategoryService) FindCategoryById(id uuid.UUID) (CategoryDetailsRespons
 func (s *CategoryService) DeleteCategoryById(id uuid.UUID) error {
 	err := s.repo.DeleteById(id)
 	return err
+}
+
+func (s *CategoryService) UpdateCategoryById(request UpdateCategoryRequest, id uuid.UUID) (Category, error) {
+	updatedCategory := Category{
+		Id:   id,
+		Name: request.Name,
+		Slug: request.Slug,
+	}
+	err := s.repo.Update(updatedCategory)
+	return updatedCategory, err
 }

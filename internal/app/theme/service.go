@@ -12,7 +12,7 @@ func NewThemeService(repo ThemeRepository) *ThemeService {
 	return &ThemeService{repo: repo}
 }
 
-func (s *ThemeService) CreateTheme(request CreateThemeRequest, userId uuid.UUID) (Theme, error) {
+func (s *ThemeService) CreateTheme(request CreateThemeRequest) (Theme, error) {
 	newTheme := Theme{
 		Id:            uuid.New(),
 		Name:          request.Name,
@@ -45,4 +45,16 @@ func (s *ThemeService) FindThemeById(id uuid.UUID) (ThemeDetailsResponse, error)
 func (s *ThemeService) DeleteThemeById(id uuid.UUID) error {
 	err := s.repo.DeleteById(id)
 	return err
+}
+
+func (s *ThemeService) UpdateThemeById(request UpdateThemeRequest, id uuid.UUID) (Theme, error) {
+	updatedCategory := Theme{
+		Id:            id,
+		Name:          request.Name,
+		Slug:          request.Slug,
+		Excerpt:       request.Excerpt,
+		FeaturedImage: request.FeaturedImage,
+	}
+	err := s.repo.Update(updatedCategory)
+	return updatedCategory, err
 }

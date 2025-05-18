@@ -10,6 +10,7 @@ import (
 
 type ThemeRepository interface {
 	Save(theme Theme) error
+	Update(theme Theme) error
 	FindByID(id uuid.UUID) (*Theme, error)
 	DeleteById(id uuid.UUID) error
 }
@@ -27,6 +28,15 @@ func (r *MySQLThemeRepository) Save(theme Theme) error {
 		INSERT INTO themes (id, name, slug, excerpt, featuredImage)
 		VALUES (?, ?, ?, ?, ?)`
 	_, err := r.db.Exec(query, theme.Id, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage)
+	return err
+}
+
+func (r *MySQLThemeRepository) Update(theme Theme) error {
+	query := `
+		UPDATE themes
+			SET name = ?, slug = ?, excerpt = ?, featuredImage = ?
+			WHERE id = ?`
+	_, err := r.db.Exec(query, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage, theme.Id)
 	return err
 }
 

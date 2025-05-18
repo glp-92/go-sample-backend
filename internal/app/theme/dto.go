@@ -11,8 +11,26 @@ type CreateThemeRequest struct {
 	FeaturedImage string `json:"featuredImage"`
 }
 
+type UpdateThemeRequest struct {
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	Excerpt       string `json:"excerpt"`
+	FeaturedImage string `json:"featuredImage"`
+}
+
 type CreateThemeResponse struct {
-	ThemeID string `json:"themeId"`
+	ThemeID       string `json:"themeId"`
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	Excerpt       string `json:"excerpt"`
+	FeaturedImage string `json:"featuredImage"`
+}
+
+type UpdateThemeResponse struct {
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	Excerpt       string `json:"excerpt"`
+	FeaturedImage string `json:"featuredImage"`
 }
 
 type ThemeDetailsResponse struct {

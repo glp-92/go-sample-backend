@@ -9,8 +9,20 @@ type CreateCategoryRequest struct {
 	Slug string `json:"slug"`
 }
 
+type UpdateCategoryRequest struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
 type CreateCategoryResponse struct {
 	CategoryID string `json:"categoryId"`
+	Name       string `json:"name"`
+	Slug       string `json:"slug"`
+}
+
+type UpdateCategoryResponse struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type CategoryDetailsResponse struct {

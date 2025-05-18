@@ -10,6 +10,7 @@ import (
 
 type CategoryRepository interface {
 	Save(category Category) error
+	Update(Category Category) error
 	FindByID(id uuid.UUID) (*Category, error)
 	DeleteById(id uuid.UUID) error
 }
@@ -27,6 +28,15 @@ func (r *MySQLCategoryRepository) Save(category Category) error {
 		INSERT INTO categories (id, name, slug)
 		VALUES (?, ?, ?)`
 	_, err := r.db.Exec(query, category.Id, category.Name, category.Slug)
+	return err
+}
+
+func (r *MySQLCategoryRepository) Update(category Category) error {
+	query := `
+		UPDATE categories
+			SET name = ?, slug = ?
+			WHERE id = ?`
+	_, err := r.db.Exec(query, category.Name, category.Slug, category.Id)
 	return err
 }
 
