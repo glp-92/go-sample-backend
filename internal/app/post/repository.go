@@ -7,11 +7,14 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
+	"fullstackcms/backend/pkg/auth"
 )
 
 type PostRepository interface {
 	Save(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
+	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
 }
 
 type MySQLPostRepository struct {
@@ -92,4 +95,77 @@ func (r *MySQLPostRepository) FindByID(id uuid.UUID) (*Post, error) {
 		return nil, err
 	}
 	return &post, nil
+}
+
+func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error) {
+	var (
+		conditions []string
+		args       []any
+	)
+	if keyword != "" {
+		conditions = append(conditions, "(title LIKE ? OR content LIKE ?)")
+		kw := "%" + keyword + "%"
+		args = append(args, kw, kw)
+	}
+	if category != "" {
+		conditions = append(conditions, "c.name = ?")
+		args = append(args, category)
+	}
+	if theme != "" {
+		conditions = append(conditions, "t.name = ?")
+		args = append(args, theme)
+	}
+	whereClause := ""
+	if len(conditions) > 0 {
+		whereClause = "WHERE " + strings.Join(conditions, " AND ")
+	}
+	countQuery := fmt.Sprintf(`
+		SELECT COUNT(DISTINCT p.id)
+		FROM posts p
+		JOIN users u ON p.user_id = u.id
+		LEFT JOIN posts_categories pc ON p.id = pc.post_id
+		LEFT JOIN categories c ON pc.category_id = c.id
+		LEFT JOIN posts_themes pt ON p.id = pt.post_id
+		LEFT JOIN themes t ON pt.theme_id = t.id
+		%s`, whereClause)
+
+	countArgs := make([]any, len(args))
+	copy(countArgs, args)
+	var totalPosts int
+	err := r.db.QueryRow(countQuery, countArgs...).Scan(&totalPosts)
+	if err != nil {
+		return nil, 0, err
+	}
+	order := "DESC"
+	if reverse {
+		order = "ASC"
+	}
+	args = append(args, limit, offset)
+	query := fmt.Sprintf(`
+        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, u.username
+        FROM posts p
+		JOIN users u on p.user_id = u.id
+		LEFT JOIN posts_categories pc ON p.id = pc.post_id
+		LEFT JOIN categories c ON pc.category_id = c.id
+		LEFT JOIN posts_themes pt ON p.id = pt.post_id
+		LEFT JOIN themes t ON pt.theme_id = t.id
+        %s
+        ORDER BY date %s
+        LIMIT ? OFFSET ?`, whereClause, order)
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	var posts []Post
+	for rows.Next() {
+		var p Post
+		var u auth.User
+		err := rows.Scan(&p.Id, &p.Title, &p.Slug, &p.Excerpt, &p.Content, &p.FeaturedImage, &p.Date, &u.Username)
+		if err != nil {
+			return nil, 0, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, totalPosts, nil
 }

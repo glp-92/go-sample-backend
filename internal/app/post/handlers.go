@@ -2,7 +2,9 @@ package post
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"fullstackcms/backend/pkg/auth"
 
@@ -50,4 +52,43 @@ func GetPostByIDHandler(service *PostService, w http.ResponseWriter, r *http.Req
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(post)
+}
+
+func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	keyword := query.Get("keyword")
+	category := query.Get("category")
+	theme := query.Get("theme")
+	reverse := query.Get("reverse") == "true"
+	pageStr := query.Get("page")
+	if pageStr == "" {
+		http.Error(w, "missing 'page' parameter", http.StatusBadRequest)
+		return
+	}
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		http.Error(w, "invalid 'page' parameter", http.StatusBadRequest)
+		return
+	}
+	perPageStr := query.Get("perpage")
+	perPage := 10
+	if perPageStr != "" {
+		if p, err := strconv.Atoi(perPageStr); err == nil && p > 0 {
+			perPage = p
+		}
+	}
+	posts, totalPosts, err := service.FindPostsWithFilters(keyword, category, theme, page, perPage, reverse)
+	fmt.Println(totalPosts)
+	if err != nil {
+		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response := map[string]any{
+		"posts":      posts,
+		"totalPosts": totalPosts,
+		"page":       page,
+		"perpage":    perPage,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

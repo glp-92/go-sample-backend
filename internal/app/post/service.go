@@ -48,3 +48,8 @@ func (s *PostService) FindPostById(id uuid.UUID) (PostDetailsResponse, error) {
 	}
 	return response, nil
 }
+
+func (s *PostService) FindPostsWithFilters(keyword, category, theme string, page, perPage int, reverse bool) ([]Post, int, error) {
+	offset := (page - 1) * perPage
+	return s.repo.FindPostsFiltered(keyword, category, theme, perPage, offset, reverse)
+}
