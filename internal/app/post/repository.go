@@ -15,6 +15,7 @@ type PostRepository interface {
 	Save(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
 	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
+	DeleteById(id uuid.UUID) error
 }
 
 type MySQLPostRepository struct {
@@ -77,6 +78,25 @@ func (r *MySQLPostRepository) Save(post Post, categoryIds []uuid.UUID, themeIds 
 		}
 	}
 	return tx.Commit()
+}
+
+func (r *MySQLPostRepository) DeleteById(id uuid.UUID) error {
+	query := `
+        DELETE
+        FROM posts
+        WHERE id = ?`
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("category not found")
+	}
+	return nil
 }
 
 func (r *MySQLPostRepository) FindByID(id uuid.UUID) (*Post, error) {

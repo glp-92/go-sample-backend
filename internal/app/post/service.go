@@ -53,3 +53,8 @@ func (s *PostService) FindPostsWithFilters(keyword, category, theme string, page
 	offset := (page - 1) * perPage
 	return s.repo.FindPostsFiltered(keyword, category, theme, perPage, offset, reverse)
 }
+
+func (s *PostService) DeletePostById(id uuid.UUID) error {
+	err := s.repo.DeleteById(id)
+	return err
+}
