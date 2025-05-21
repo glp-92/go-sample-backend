@@ -83,12 +83,11 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	response := map[string]any{
-		"posts":      posts,
-		"totalPosts": totalPosts,
-		"page":       page,
-		"perpage":    perPage,
-	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(PostsFilteredResponse{
+		Posts:   posts,
+		Total:   totalPosts,
+		Page:    page,
+		PerPage: perPage,
+	})
 }

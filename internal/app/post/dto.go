@@ -30,3 +30,10 @@ type PostDetailsResponse struct {
 	UserId        uuid.UUID `json:"userId"`
 	Date          time.Time `json:"date"`
 }
+
+type PostsFilteredResponse struct {
+	Posts   []Post `json:"posts"`
+	Total   int    `json:"totalPosts"`
+	Page    int    `json:"page"`
+	PerPage int    `json:"perPage"`
+}
