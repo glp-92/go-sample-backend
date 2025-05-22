@@ -21,9 +21,8 @@ func newStatusResponseWriter(w http.ResponseWriter) *statusResponseWriter {
 
 func Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
-		log.Printf("%s - %s %s\n", req.RemoteAddr, req.Method, req.URL.Path)
 		w := newStatusResponseWriter(writer)
 		next.ServeHTTP(w, req)
-		log.Printf("%s - %s %s %d", req.RemoteAddr, req.Method, req.URL.Path, w.statusCode)
+		log.Printf("%s - %s %s - %d", req.RemoteAddr, req.Method, req.URL.Path, w.statusCode)
 	})
 }

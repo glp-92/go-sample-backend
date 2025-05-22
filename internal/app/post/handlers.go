@@ -34,7 +34,35 @@ func CreatePostHandler(service *PostService, w http.ResponseWriter, r *http.Requ
 	})
 }
 
-func GetPostByIDHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
+func UpdatePostByIdHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
+	user, ok := auth.GetUser(r.Context())
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	postIdStr := r.PathValue("id")
+	postId, err := uuid.Parse(postIdStr)
+	if err != nil {
+		http.Error(w, "ID invalido", http.StatusBadRequest)
+		return
+	}
+	var request UpdatePostRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Error en el formato del cuerpo", http.StatusBadRequest)
+		return
+	}
+	post, err := service.UpdatePostById(request, user.Id, postId)
+	if err != nil {
+		http.Error(w, "Error al actualizar el post", http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UpdatePostResponse{
+		PostID: post.Id.String(),
+	})
+}
+
+func GetPostByIdHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -90,4 +118,19 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		Page:    page,
 		PerPage: perPage,
 	})
+}
+
+func DeletePostByIdHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "ID invalido", http.StatusBadRequest)
+		return
+	}
+	err = service.DeletePostById(id)
+	if err != nil {
+		http.Error(w, "Error al eliminar post", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

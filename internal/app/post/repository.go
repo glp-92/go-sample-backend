@@ -13,6 +13,7 @@ import (
 
 type PostRepository interface {
 	Save(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
+	Update(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
 	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
 	DeleteById(id uuid.UUID) error
@@ -71,6 +72,65 @@ func (r *MySQLPostRepository) Save(post Post, categoryIds []uuid.UUID, themeIds 
 			INSERT INTO posts_themes (post_id, theme_id)
 			VALUES %s`, strings.Join(placeholders, ", "))
 
+		_, err = tx.Exec(themeQuery, values...)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *MySQLPostRepository) Update(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	query := `
+		UPDATE posts
+		SET title = ?, slug = ?, excerpt = ?, content = ?, featured_image = ?, user_id = ?, date = ?
+		WHERE id = ?`
+	_, err = tx.Exec(query, post.Title, post.Slug, post.Excerpt, post.Content, post.FeaturedImage, post.UserId, post.Date, post.Id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec(`DELETE FROM posts_categories WHERE post_id = ?`, post.Id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec(`DELETE FROM posts_themes WHERE post_id = ?`, post.Id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if len(categoryIds) > 0 {
+		values := make([]any, 0, len(categoryIds)*2)
+		placeholders := make([]string, 0, len(categoryIds))
+		for _, categoryId := range categoryIds {
+			placeholders = append(placeholders, "(?, ?)")
+			values = append(values, post.Id, categoryId)
+		}
+		catQuery := fmt.Sprintf(`
+			INSERT INTO posts_categories (post_id, category_id)
+			VALUES %s`, strings.Join(placeholders, ", "))
+		_, err = tx.Exec(catQuery, values...)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	if len(themeIds) > 0 {
+		values := make([]any, 0, len(themeIds)*2)
+		placeholders := make([]string, 0, len(themeIds))
+		for _, themeId := range themeIds {
+			placeholders = append(placeholders, "(?, ?)")
+			values = append(values, post.Id, themeId)
+		}
+		themeQuery := fmt.Sprintf(`
+			INSERT INTO posts_themes (post_id, theme_id)
+			VALUES %s`, strings.Join(placeholders, ", "))
 		_, err = tx.Exec(themeQuery, values...)
 		if err != nil {
 			tx.Rollback()

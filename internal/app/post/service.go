@@ -29,6 +29,21 @@ func (s *PostService) CreatePost(request CreatePostRequest, userId uuid.UUID) (P
 	return newPost, err
 }
 
+func (s *PostService) UpdatePostById(request UpdatePostRequest, userId uuid.UUID, postId uuid.UUID) (Post, error) {
+	updatedPost := Post{
+		Id:            postId,
+		Title:         request.Title,
+		Slug:          request.Slug,
+		Excerpt:       request.Excerpt,
+		Content:       request.Content,
+		FeaturedImage: request.FeaturedImage,
+		UserId:        userId,
+		Date:          time.Now(),
+	}
+	err := s.repo.Update(updatedPost, request.CategoryIds, request.ThemeIds)
+	return updatedPost, err
+}
+
 func (s *PostService) FindPostById(id uuid.UUID) (PostDetailsResponse, error) {
 	post, err := s.repo.FindByID(id)
 	if err != nil {

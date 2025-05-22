@@ -14,12 +14,12 @@ func RegisterRoutes(db *sql.DB, authMiddlewares *auth.AuthMiddlewares) {
 		CreateThemeHandler(service, w, r)
 	})))
 	http.HandleFunc("GET /themes/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetThemeByIDHandler(service, w, r)
+		GetThemeByIdHandler(service, w, r)
 	})
 	http.Handle("PUT /themes/{id}", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		UpdateThemeByIDHandler(service, w, r)
+		UpdateThemeByIdHandler(service, w, r)
 	})))
 	http.Handle("DELETE /themes/{id}", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		DeleteThemeHandler(service, w, r)
+		DeleteThemeByIdHandler(service, w, r)
 	})))
 }

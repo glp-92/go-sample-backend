@@ -29,7 +29,7 @@ func CreateThemeHandler(service *ThemeService, w http.ResponseWriter, r *http.Re
 	})
 }
 
-func GetThemeByIDHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
+func GetThemeByIdHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -49,7 +49,7 @@ func GetThemeByIDHandler(service *ThemeService, w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(theme)
 }
 
-func DeleteThemeHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
+func DeleteThemeByIdHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -64,7 +64,7 @@ func DeleteThemeHandler(service *ThemeService, w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func UpdateThemeByIDHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
+func UpdateThemeByIdHandler(service *ThemeService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {

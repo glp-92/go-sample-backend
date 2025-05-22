@@ -16,7 +16,21 @@ type CreatePostRequest struct {
 	ThemeIds      []uuid.UUID `json:"themeIds"`
 }
 
+type UpdatePostRequest struct {
+	Title         string      `json:"title"`
+	Slug          string      `json:"slug"`
+	Excerpt       string      `json:"excerpt"`
+	Content       string      `json:"content"`
+	FeaturedImage string      `json:"featuredImage"`
+	CategoryIds   []uuid.UUID `json:"categoryIds"`
+	ThemeIds      []uuid.UUID `json:"themeIds"`
+}
+
 type CreatePostResponse struct {
+	PostID string `json:"postId"`
+}
+
+type UpdatePostResponse struct {
 	PostID string `json:"postId"`
 }
 

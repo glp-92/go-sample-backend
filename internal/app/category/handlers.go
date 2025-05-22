@@ -27,7 +27,7 @@ func CreateCategoryHandler(service *CategoryService, w http.ResponseWriter, r *h
 	})
 }
 
-func GetCategoryByIDHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
+func GetCategoryByIdHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -47,7 +47,7 @@ func GetCategoryByIDHandler(service *CategoryService, w http.ResponseWriter, r *
 	json.NewEncoder(w).Encode(category)
 }
 
-func DeleteCategoryHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
+func DeleteCategoryByIdHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -62,7 +62,7 @@ func DeleteCategoryHandler(service *CategoryService, w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func UpdateCategoryByIDHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
+func UpdateCategoryByIdHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
