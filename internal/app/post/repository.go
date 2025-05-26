@@ -222,7 +222,7 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 	}
 	args = append(args, limit, offset)
 	query := fmt.Sprintf(`
-        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, u.username
+        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, u.username, GROUP_CONCAT(DISTINCT c.name) as categories_names, GROUP_CONCAT(DISTINCT c.slug) as categories_slugs
         FROM posts p
 		JOIN users u on p.user_id = u.id
 		LEFT JOIN posts_categories pc ON p.id = pc.post_id
@@ -230,6 +230,7 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 		LEFT JOIN posts_themes pt ON p.id = pt.post_id
 		LEFT JOIN themes t ON pt.theme_id = t.id
         %s
+		GROUP BY p.id
         ORDER BY date %s
         LIMIT ? OFFSET ?`, whereClause, order)
 	rows, err := r.db.Query(query, args...)
@@ -241,7 +242,9 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 	for rows.Next() {
 		var p Post
 		var u auth.User
-		err := rows.Scan(&p.Id, &p.Title, &p.Slug, &p.Excerpt, &p.Content, &p.FeaturedImage, &p.Date, &u.Username)
+		var categoriesNames sql.NullString
+		var categoriesSlugs sql.NullString
+		err := rows.Scan(&p.Id, &p.Title, &p.Slug, &p.Excerpt, &p.Content, &p.FeaturedImage, &p.Date, &u.Username, &categoriesNames, &categoriesSlugs)
 		if err != nil {
 			return nil, 0, err
 		}
