@@ -43,8 +43,8 @@ func main() {
 
 	authRepo := auth.NewMySQLAuthRepository(db)
 	authService := auth.NewAuthService(authRepo, cfg.Auth)
-
 	router.SetupRouter(db, authService)
 	log.Printf("Server listening port :%s", cfg.API.APIPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", cfg.API.APIPort), middlewares.Log(http.DefaultServeMux)))
+	middleware_handler := middlewares.Log(middlewares.CORS(http.DefaultServeMux))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", cfg.API.APIPort), middleware_handler))
 }

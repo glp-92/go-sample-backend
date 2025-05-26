@@ -27,7 +27,7 @@ CREATE TABLE themes (
     name VARCHAR(100) NOT NULL UNIQUE,
     slug VARCHAR(100) NOT NULL UNIQUE,
     excerpt VARCHAR(255) NOT NULL,
-    featured_image VARCHAR(100),
+    featured_image VARCHAR(100)
 );
 CREATE TABLE posts_themes (
     post_id CHAR(36) NOT NULL,
