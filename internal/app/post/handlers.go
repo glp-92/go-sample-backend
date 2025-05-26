@@ -2,7 +2,7 @@ package post
 
 import (
 	"encoding/json"
-	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -106,7 +106,6 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		}
 	}
 	posts, totalPosts, err := service.FindPostsWithFilters(keyword, category, theme, page, perPage, reverse)
-	fmt.Println(totalPosts)
 	if err != nil {
 		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -117,6 +116,7 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		Total:   totalPosts,
 		Page:    page,
 		PerPage: perPage,
+		Pages:   int(math.Ceil(float64(totalPosts) / float64(perPage))),
 	})
 }
 
