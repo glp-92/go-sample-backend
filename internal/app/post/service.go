@@ -3,6 +3,8 @@ package post
 import (
 	"time"
 
+	"fullstackcms/backend/internal/app/post_category"
+
 	"github.com/google/uuid"
 )
 
@@ -67,6 +69,11 @@ func (s *PostService) FindPostById(id uuid.UUID) (PostDetailsResponse, error) {
 func (s *PostService) FindPostsWithFilters(keyword, category, theme string, page, perPage int, reverse bool) ([]Post, int, error) {
 	offset := (page - 1) * perPage
 	return s.repo.FindPostsFiltered(keyword, category, theme, perPage, offset, reverse)
+}
+
+func (s *PostService) FindPostsWithCategoriesAndFilters(keyword, category, theme string, page, perPage int, reverse bool) ([]post_category.PostCategory, int, error) {
+	offset := (page - 1) * perPage
+	return s.repo.FindPostsWithCategoriesFiltered(keyword, category, theme, perPage, offset, reverse)
 }
 
 func (s *PostService) DeletePostById(id uuid.UUID) error {

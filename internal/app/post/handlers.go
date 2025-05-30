@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"fullstackcms/backend/internal/app/post_category"
 	"fullstackcms/backend/pkg/auth"
 
 	"github.com/google/uuid"
@@ -105,13 +106,13 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 			perPage = p
 		}
 	}
-	posts, totalPosts, err := service.FindPostsWithFilters(keyword, category, theme, page, perPage, reverse)
+	posts, totalPosts, err := service.FindPostsWithCategoriesAndFilters(keyword, category, theme, page, perPage, reverse)
 	if err != nil {
 		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(PostsFilteredResponse{
+	json.NewEncoder(w).Encode(post_category.PostsWithCategoriesFilteredResponse{
 		Posts:   posts,
 		Total:   totalPosts,
 		Page:    page,

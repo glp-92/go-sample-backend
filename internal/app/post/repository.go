@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"fullstackcms/backend/internal/app/post_category"
 	"fullstackcms/backend/pkg/auth"
 )
 
@@ -16,6 +17,7 @@ type PostRepository interface {
 	Update(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
 	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
+	FindPostsWithCategoriesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]post_category.PostCategory, int, error)
 	DeleteById(id uuid.UUID) error
 }
 
@@ -251,4 +253,8 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 		posts = append(posts, p)
 	}
 	return posts, totalPosts, nil
+}
+
+func (r *MySQLPostRepository) FindPostsWithCategoriesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]post_category.PostCategory, int, error) {
+	return post_category.FindPostsWithCategoriesFiltered(r.db, keyword, category, theme, limit, offset, reverse)
 }
