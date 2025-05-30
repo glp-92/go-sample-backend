@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"fullstackcms/backend/internal/app/post_category"
+	"fullstackcms/backend/internal/app/common"
 	"fullstackcms/backend/pkg/auth"
 
 	"github.com/google/uuid"
@@ -112,7 +112,7 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post_category.PostsWithCategoriesFilteredResponse{
+	json.NewEncoder(w).Encode(common.PostsWithCategoriesFilteredResponse{
 		Posts:   posts,
 		Total:   totalPosts,
 		Page:    page,

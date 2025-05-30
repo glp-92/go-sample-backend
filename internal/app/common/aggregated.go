@@ -1,14 +1,17 @@
-package post_category
+package common
 
 import (
 	"database/sql"
 	"fmt"
 	"fullstackcms/backend/internal/app/category"
+	"fullstackcms/backend/internal/app/theme"
 	"fullstackcms/backend/pkg/auth"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
-func FindPostsWithCategoriesFiltered(db *sql.DB, keyword, categoryname, theme string, limit, offset int, reverse bool) ([]PostCategory, int, error) {
+func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname, themename string, limit, offset int, reverse bool) ([]PostAggregated, int, error) {
 	var (
 		conditions []string
 		args       []any
@@ -22,9 +25,9 @@ func FindPostsWithCategoriesFiltered(db *sql.DB, keyword, categoryname, theme st
 		conditions = append(conditions, "c.name = ?")
 		args = append(args, categoryname)
 	}
-	if theme != "" {
+	if themename != "" {
 		conditions = append(conditions, "t.name = ?")
-		args = append(args, theme)
+		args = append(args, themename)
 	}
 	whereClause := ""
 	if len(conditions) > 0 {
@@ -54,8 +57,12 @@ func FindPostsWithCategoriesFiltered(db *sql.DB, keyword, categoryname, theme st
 	args = append(args, limit, offset)
 	query := fmt.Sprintf(`
         SELECT p.id, p.title, p.slug, p.excerpt, p.featured_image, p.date, u.username,
-		       GROUP_CONCAT(DISTINCT c.name) as categories_names,
-		       GROUP_CONCAT(DISTINCT c.slug) as categories_slugs
+			GROUP_CONCAT(DISTINCT c.id) as categories_ids,
+			GROUP_CONCAT(DISTINCT c.name) as categories_names,
+			GROUP_CONCAT(DISTINCT c.slug) as categories_slugs,
+			GROUP_CONCAT(DISTINCT t.id) as themes_ids,
+			GROUP_CONCAT(DISTINCT t.name) as themes_names,
+			GROUP_CONCAT(DISTINCT t.slug) as themes_slugs
         FROM posts p
 		JOIN users u on p.user_id = u.id
 		LEFT JOIN posts_categories pc ON p.id = pc.post_id
@@ -72,35 +79,64 @@ func FindPostsWithCategoriesFiltered(db *sql.DB, keyword, categoryname, theme st
 		return nil, 0, err
 	}
 	defer rows.Close()
-	var postsWithCategories []PostCategory
+	var postsAggregated []PostAggregated
 	for rows.Next() {
-		var p PostCategory
+		var p PostAggregated
 		var u auth.User
+		var categoriesIds sql.NullString
 		var categoriesNames sql.NullString
 		var categoriesSlugs sql.NullString
+		var themesIds sql.NullString
+		var themesNames sql.NullString
+		var themesSlugs sql.NullString
 		err := rows.Scan(
 			&p.Id, &p.Title, &p.Slug, &p.Excerpt, &p.FeaturedImage,
-			&p.Date, &u.Username, &categoriesNames, &categoriesSlugs,
+			&p.Date, &u.Username, &categoriesIds, &categoriesNames, &categoriesSlugs, &themesIds, &themesNames, &themesSlugs,
 		)
 		if err != nil {
 			return nil, 0, err
 		}
-		p.Categories = []category.Category{}
-		if categoriesNames.Valid && categoriesSlugs.Valid &&
-			categoriesNames.String != "" && categoriesSlugs.String != "" {
+		p.Categories = []category.CategoryDetailsResponse{}
+		if categoriesIds.Valid && categoriesNames.Valid && categoriesSlugs.Valid &&
+			categoriesIds.String != "" && categoriesNames.String != "" && categoriesSlugs.String != "" {
+			ids := strings.Split(categoriesIds.String, ",")
 			names := strings.Split(categoriesNames.String, ",")
 			slugs := strings.Split(categoriesSlugs.String, ",")
-
-			if len(names) == len(slugs) {
-				for i := range names {
-					p.Categories = append(p.Categories, category.Category{
+			if len(ids) == len(names) && len(ids) == len(slugs) {
+				for i := range ids {
+					parsedID, err := uuid.Parse(ids[i])
+					if err != nil {
+						continue
+					}
+					p.Categories = append(p.Categories, category.CategoryDetailsResponse{
+						Id:   parsedID,
 						Name: names[i],
 						Slug: slugs[i],
 					})
 				}
 			}
 		}
-		postsWithCategories = append(postsWithCategories, p)
+		p.Themes = []theme.ThemeBasicInfoResponse{}
+		if themesIds.Valid && themesNames.Valid && themesSlugs.Valid &&
+			categoriesIds.String != "" && themesNames.String != "" && themesSlugs.String != "" {
+			ids := strings.Split(themesIds.String, ",")
+			names := strings.Split(themesNames.String, ",")
+			slugs := strings.Split(themesNames.String, ",")
+			if len(names) == len(slugs) {
+				for i := range names {
+					parsedID, err := uuid.Parse(ids[i])
+					if err != nil {
+						continue
+					}
+					p.Themes = append(p.Themes, theme.ThemeBasicInfoResponse{
+						Id:   parsedID,
+						Name: names[i],
+						Slug: slugs[i],
+					})
+				}
+			}
+		}
+		postsAggregated = append(postsAggregated, p)
 	}
-	return postsWithCategories, totalPosts, nil
+	return postsAggregated, totalPosts, nil
 }

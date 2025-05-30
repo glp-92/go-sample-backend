@@ -40,3 +40,9 @@ type ThemeDetailsResponse struct {
 	Excerpt       string    `json:"excerpt"`
 	FeaturedImage string    `json:"featuredImage"`
 }
+
+type ThemeBasicInfoResponse struct {
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Slug string    `json:"slug"`
+}

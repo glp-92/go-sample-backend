@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"fullstackcms/backend/internal/app/post_category"
+	"fullstackcms/backend/internal/app/common"
 	"fullstackcms/backend/pkg/auth"
 )
 
@@ -17,7 +17,7 @@ type PostRepository interface {
 	Update(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
 	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
-	FindPostsWithCategoriesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]post_category.PostCategory, int, error)
+	FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostAggregated, int, error)
 	DeleteById(id uuid.UUID) error
 }
 
@@ -255,6 +255,6 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 	return posts, totalPosts, nil
 }
 
-func (r *MySQLPostRepository) FindPostsWithCategoriesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]post_category.PostCategory, int, error) {
-	return post_category.FindPostsWithCategoriesFiltered(r.db, keyword, category, theme, limit, offset, reverse)
+func (r *MySQLPostRepository) FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostAggregated, int, error) {
+	return common.FindPostsWithCategoriesAndThemesFiltered(r.db, keyword, category, theme, limit, offset, reverse)
 }
