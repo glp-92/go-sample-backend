@@ -83,6 +83,21 @@ func GetPostByIdHandler(service *PostService, w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(post)
 }
 
+func GetPostBySlugHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
+	slugStr := r.PathValue("slug")
+	post, err := service.FindPostDetailsBySlug(slugStr)
+	if err != nil || post == nil {
+		http.Error(w, "Error al buscar el post", http.StatusNotFound)
+		return
+	}
+	if post.Id == uuid.Nil {
+		http.Error(w, "Post no encontrado", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
 func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	keyword := query.Get("keyword")
@@ -106,13 +121,13 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 			perPage = p
 		}
 	}
-	posts, totalPosts, err := service.FindPostsWithCategoriesAndFilters(keyword, category, theme, page, perPage, reverse)
+	posts, totalPosts, err := service.FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme, page, perPage, reverse)
 	if err != nil {
 		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(common.PostsWithCategoriesFilteredResponse{
+	json.NewEncoder(w).Encode(common.PostSummaryListResponse{
 		Posts:   posts,
 		Total:   totalPosts,
 		Page:    page,

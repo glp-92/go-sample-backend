@@ -70,9 +70,13 @@ func (s *PostService) FindPostsWithFilters(keyword, category, theme string, page
 	return s.repo.FindPostsFiltered(keyword, category, theme, perPage, offset, reverse)
 }
 
-func (s *PostService) FindPostsWithCategoriesAndFilters(keyword, category, theme string, page, perPage int, reverse bool) ([]common.PostAggregated, int, error) {
+func (s *PostService) FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, page, perPage int, reverse bool) ([]common.PostSummaryAggregated, int, error) {
 	offset := (page - 1) * perPage
 	return s.repo.FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme, perPage, offset, reverse)
+}
+
+func (s *PostService) FindPostDetailsBySlug(slugStr string) (*common.PostDetailsAggregated, error) {
+	return s.repo.FindPostDetailsBySlug(slugStr)
 }
 
 func (s *PostService) DeletePostById(id uuid.UUID) error {

@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname, themename string, limit, offset int, reverse bool) ([]PostAggregated, int, error) {
+func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname, themename string, limit, offset int, reverse bool) ([]PostSummaryAggregated, int, error) {
 	var (
 		conditions []string
 		args       []any
@@ -79,9 +79,9 @@ func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname,
 		return nil, 0, err
 	}
 	defer rows.Close()
-	var postsAggregated []PostAggregated
+	var postsAggregated []PostSummaryAggregated
 	for rows.Next() {
-		var p PostAggregated
+		var p PostSummaryAggregated
 		var u auth.User
 		var categoriesIds sql.NullString
 		var categoriesNames sql.NullString
@@ -139,4 +139,102 @@ func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname,
 		postsAggregated = append(postsAggregated, p)
 	}
 	return postsAggregated, totalPosts, nil
+}
+
+func FindPostDetailsBySlug(db *sql.DB, slugStr string) (*PostDetailsAggregated, error) {
+	query := `
+        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, p.user_id,
+            GROUP_CONCAT(DISTINCT c.id),
+            GROUP_CONCAT(DISTINCT c.name),
+            GROUP_CONCAT(DISTINCT c.slug),
+            GROUP_CONCAT(DISTINCT t.id),
+            GROUP_CONCAT(DISTINCT t.name),
+            GROUP_CONCAT(DISTINCT t.slug)
+        FROM posts p
+        JOIN users u on p.user_id = u.id
+        LEFT JOIN posts_categories pc ON p.id = pc.post_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN posts_themes pt ON p.id = pt.post_id
+        LEFT JOIN themes t ON pt.theme_id = t.id
+        WHERE p.slug = ?
+        GROUP BY p.id`
+	rows, err := db.Query(query, slugStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var postDetails PostDetailsAggregated
+	var (
+		catIdsStr, catNamesStr, catSlugsStr       sql.NullString
+		themeIdsStr, themeNamesStr, themeSlugsStr sql.NullString
+	)
+	if rows.Next() {
+		err := rows.Scan(
+			&postDetails.Id,
+			&postDetails.Title,
+			&postDetails.Slug,
+			&postDetails.Excerpt,
+			&postDetails.Content,
+			&postDetails.FeaturedImage,
+			&postDetails.Date,
+			&postDetails.UserId,
+			&catIdsStr,
+			&catNamesStr,
+			&catSlugsStr,
+			&themeIdsStr,
+			&themeNamesStr,
+			&themeSlugsStr,
+		)
+		if err != nil {
+			return nil, err
+		}
+		postDetails.Categories = parseCategories(catIdsStr, catNamesStr, catSlugsStr)
+		postDetails.Themes = parseThemes(themeIdsStr, themeNamesStr, themeSlugsStr)
+		return &postDetails, nil
+	}
+	return nil, nil
+}
+
+func parseCategories(ids, names, slugs sql.NullString) []category.CategoryDetailsResponse {
+	if !ids.Valid || !names.Valid || !slugs.Valid {
+		return []category.CategoryDetailsResponse{}
+	}
+	idList := strings.Split(ids.String, ",")
+	nameList := strings.Split(names.String, ",")
+	slugList := strings.Split(slugs.String, ",")
+	var categories []category.CategoryDetailsResponse
+	for i := range idList {
+		catID, err := uuid.Parse(strings.TrimSpace(idList[i]))
+		if err != nil {
+			continue
+		}
+		categories = append(categories, category.CategoryDetailsResponse{
+			Id:   catID,
+			Name: nameList[i],
+			Slug: slugList[i],
+		})
+	}
+	return categories
+}
+
+func parseThemes(ids, names, slugs sql.NullString) []theme.ThemeBasicInfoResponse {
+	if !ids.Valid || !names.Valid || !slugs.Valid {
+		return []theme.ThemeBasicInfoResponse{}
+	}
+	idList := strings.Split(ids.String, ",")
+	nameList := strings.Split(names.String, ",")
+	slugList := strings.Split(slugs.String, ",")
+	var themes []theme.ThemeBasicInfoResponse
+	for i := range idList {
+		themeID, err := uuid.Parse(strings.TrimSpace(idList[i]))
+		if err != nil {
+			continue // salteamos si el UUID no es válido
+		}
+		themes = append(themes, theme.ThemeBasicInfoResponse{
+			Id:   themeID,
+			Name: nameList[i],
+			Slug: slugList[i],
+		})
+	}
+	return themes
 }

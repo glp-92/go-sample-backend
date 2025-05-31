@@ -17,7 +17,8 @@ type PostRepository interface {
 	Update(post Post, categoryIds []uuid.UUID, themeIds []uuid.UUID) error
 	FindByID(id uuid.UUID) (*Post, error)
 	FindPostsFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]Post, int, error)
-	FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostAggregated, int, error)
+	FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostSummaryAggregated, int, error)
+	FindPostDetailsBySlug(slugStr string) (*common.PostDetailsAggregated, error)
 	DeleteById(id uuid.UUID) error
 }
 
@@ -167,7 +168,6 @@ func (r *MySQLPostRepository) FindByID(id uuid.UUID) (*Post, error) {
         FROM posts
         WHERE id = ?`
 	row := r.db.QueryRow(query, id)
-
 	var post Post
 	err := row.Scan(&post.Id, &post.Title, &post.Slug, &post.Excerpt, &post.Content, &post.FeaturedImage, &post.UserId, &post.Date)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -255,6 +255,10 @@ func (r *MySQLPostRepository) FindPostsFiltered(keyword, category, theme string,
 	return posts, totalPosts, nil
 }
 
-func (r *MySQLPostRepository) FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostAggregated, int, error) {
+func (r *MySQLPostRepository) FindPostsWithCategoriesAndThemesFiltered(keyword, category, theme string, limit, offset int, reverse bool) ([]common.PostSummaryAggregated, int, error) {
 	return common.FindPostsWithCategoriesAndThemesFiltered(r.db, keyword, category, theme, limit, offset, reverse)
+}
+
+func (r *MySQLPostRepository) FindPostDetailsBySlug(slugStr string) (*common.PostDetailsAggregated, error) {
+	return common.FindPostDetailsBySlug(r.db, slugStr)
 }

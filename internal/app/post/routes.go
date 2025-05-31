@@ -19,8 +19,8 @@ func RegisterRoutes(db *sql.DB, authMiddlewares *auth.AuthMiddlewares) {
 	http.HandleFunc("GET /posts", func(w http.ResponseWriter, r *http.Request) {
 		GetPostsWithFiltersHandler(service, w, r)
 	})
-	http.HandleFunc("GET /posts/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetPostByIdHandler(service, w, r)
+	http.HandleFunc("GET /posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		GetPostBySlugHandler(service, w, r)
 	})
 	http.Handle("DELETE /posts/{id}", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		DeletePostByIdHandler(service, w, r)
