@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"fullstackcms/backend/internal/app/category"
 	"fullstackcms/backend/internal/app/theme"
-	"fullstackcms/backend/pkg/auth"
 	"strings"
 
 	"github.com/google/uuid"
@@ -48,7 +47,7 @@ func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname,
 	var totalPosts int
 	err := db.QueryRow(countQuery, countArgs...).Scan(&totalPosts)
 	if err != nil {
-		return nil, 0, err
+		return []PostSummaryAggregated{}, 0, err
 	}
 	order := "DESC"
 	if reverse {
@@ -76,66 +75,25 @@ func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname,
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		return nil, 0, err
+		return []PostSummaryAggregated{}, 0, err
 	}
 	defer rows.Close()
 	var postsAggregated []PostSummaryAggregated
 	for rows.Next() {
 		var p PostSummaryAggregated
-		var u auth.User
-		var categoriesIds sql.NullString
-		var categoriesNames sql.NullString
-		var categoriesSlugs sql.NullString
-		var themesIds sql.NullString
-		var themesNames sql.NullString
-		var themesSlugs sql.NullString
+		var (
+			catIdsStr, catNamesStr, catSlugsStr       sql.NullString
+			themeIdsStr, themeNamesStr, themeSlugsStr sql.NullString
+		)
 		err := rows.Scan(
 			&p.Id, &p.Title, &p.Slug, &p.Excerpt, &p.FeaturedImage,
-			&p.Date, &u.Username, &categoriesIds, &categoriesNames, &categoriesSlugs, &themesIds, &themesNames, &themesSlugs,
+			&p.Date, &p.Username, &catIdsStr, &catNamesStr, &catSlugsStr, &themeIdsStr, &themeNamesStr, &themeSlugsStr,
 		)
 		if err != nil {
-			return nil, 0, err
+			return []PostSummaryAggregated{}, 0, err
 		}
-		p.Categories = []category.CategoryDetailsResponse{}
-		if categoriesIds.Valid && categoriesNames.Valid && categoriesSlugs.Valid &&
-			categoriesIds.String != "" && categoriesNames.String != "" && categoriesSlugs.String != "" {
-			ids := strings.Split(categoriesIds.String, ",")
-			names := strings.Split(categoriesNames.String, ",")
-			slugs := strings.Split(categoriesSlugs.String, ",")
-			if len(ids) == len(names) && len(ids) == len(slugs) {
-				for i := range ids {
-					parsedID, err := uuid.Parse(ids[i])
-					if err != nil {
-						continue
-					}
-					p.Categories = append(p.Categories, category.CategoryDetailsResponse{
-						Id:   parsedID,
-						Name: names[i],
-						Slug: slugs[i],
-					})
-				}
-			}
-		}
-		p.Themes = []theme.ThemeBasicInfoResponse{}
-		if themesIds.Valid && themesNames.Valid && themesSlugs.Valid &&
-			categoriesIds.String != "" && themesNames.String != "" && themesSlugs.String != "" {
-			ids := strings.Split(themesIds.String, ",")
-			names := strings.Split(themesNames.String, ",")
-			slugs := strings.Split(themesNames.String, ",")
-			if len(names) == len(slugs) {
-				for i := range names {
-					parsedID, err := uuid.Parse(ids[i])
-					if err != nil {
-						continue
-					}
-					p.Themes = append(p.Themes, theme.ThemeBasicInfoResponse{
-						Id:   parsedID,
-						Name: names[i],
-						Slug: slugs[i],
-					})
-				}
-			}
-		}
+		p.Categories = parseCategories(catIdsStr, catNamesStr, catSlugsStr)
+		p.Themes = parseThemes(themeIdsStr, themeNamesStr, themeSlugsStr)
 		postsAggregated = append(postsAggregated, p)
 	}
 	return postsAggregated, totalPosts, nil
@@ -143,7 +101,7 @@ func FindPostsWithCategoriesAndThemesFiltered(db *sql.DB, keyword, categoryname,
 
 func FindPostDetailsBySlug(db *sql.DB, slugStr string) (*PostDetailsAggregated, error) {
 	query := `
-        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, p.user_id,
+        SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.date, u.username,
             GROUP_CONCAT(DISTINCT c.id),
             GROUP_CONCAT(DISTINCT c.name),
             GROUP_CONCAT(DISTINCT c.slug),
@@ -177,7 +135,7 @@ func FindPostDetailsBySlug(db *sql.DB, slugStr string) (*PostDetailsAggregated, 
 			&postDetails.Content,
 			&postDetails.FeaturedImage,
 			&postDetails.Date,
-			&postDetails.UserId,
+			&postDetails.Username,
 			&catIdsStr,
 			&catNamesStr,
 			&catSlugsStr,

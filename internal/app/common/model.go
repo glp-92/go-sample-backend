@@ -15,7 +15,7 @@ type PostSummaryAggregated struct {
 	Slug          string                             `json:"slug"`
 	Excerpt       string                             `json:"excerpt"`
 	FeaturedImage string                             `json:"featuredImage"`
-	UserId        uuid.UUID                          `json:"userId"`
+	Username      string                             `json:"username"`
 	Date          time.Time                          `json:"date"`
 	Categories    []category.CategoryDetailsResponse `json:"categories"`
 	Themes        []theme.ThemeBasicInfoResponse     `json:"themes"`
@@ -28,7 +28,7 @@ type PostDetailsAggregated struct {
 	Excerpt       string                             `json:"excerpt"`
 	Content       string                             `json:"content"`
 	FeaturedImage string                             `json:"featuredImage"`
-	UserId        uuid.UUID                          `json:"userId"`
+	Username      string                             `json:"username"`
 	Date          time.Time                          `json:"date"`
 	Categories    []category.CategoryDetailsResponse `json:"categories"`
 	Themes        []theme.ThemeBasicInfoResponse     `json:"themes"`

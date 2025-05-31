@@ -126,6 +126,9 @@ func GetPostsWithFiltersHandler(service *PostService, w http.ResponseWriter, r *
 		http.Error(w, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if posts == nil {
+		posts = []common.PostSummaryAggregated{}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(common.PostSummaryListResponse{
 		Posts:   posts,
