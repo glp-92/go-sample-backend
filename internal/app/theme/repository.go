@@ -25,7 +25,7 @@ func NewMySQLThemeRepository(db *sql.DB) ThemeRepository {
 
 func (r *MySQLThemeRepository) Save(theme Theme) error {
 	query := `
-		INSERT INTO themes (id, name, slug, excerpt, featuredImage)
+		INSERT INTO themes (id, name, slug, excerpt, featured_image)
 		VALUES (?, ?, ?, ?, ?)`
 	_, err := r.db.Exec(query, theme.Id, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage)
 	return err
@@ -34,7 +34,7 @@ func (r *MySQLThemeRepository) Save(theme Theme) error {
 func (r *MySQLThemeRepository) Update(theme Theme) error {
 	query := `
 		UPDATE themes
-			SET name = ?, slug = ?, excerpt = ?, featuredImage = ?
+			SET name = ?, slug = ?, excerpt = ?, featured_image = ?
 			WHERE id = ?`
 	_, err := r.db.Exec(query, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage, theme.Id)
 	return err
@@ -42,7 +42,7 @@ func (r *MySQLThemeRepository) Update(theme Theme) error {
 
 func (r *MySQLThemeRepository) FindByID(id uuid.UUID) (*Theme, error) {
 	query := `
-        SELECT id, name, slug, excerpt, featuredImage
+        SELECT id, name, slug, excerpt, featured_image
         FROM themes
         WHERE id = ?`
 	row := r.db.QueryRow(query, id)
