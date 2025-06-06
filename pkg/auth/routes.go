@@ -18,4 +18,7 @@ func RegisterRoutes(db *sql.DB, service *AuthService, authMiddlewares *AuthMiddl
 	http.Handle("POST /auth/logout", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogoutHandler(service, w, r)
 	})))
+	http.Handle("GET /auth/valid", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// middleware handles 403, otherwise 200
+	})))
 }
