@@ -63,7 +63,7 @@ func GetCategoriesWithFiltersHandler(service *CategoryService, w http.ResponseWr
 	if totalPages == 0 && totalCategories > 0 {
 		totalPages = 1
 	}
-	var responseCategories []CategoryDetailsResponse
+	responseCategories := []CategoryDetailsResponse{}
 	for _, cat := range categories {
 		responseCategories = append(responseCategories, CategoryDetailsResponse(cat))
 	}

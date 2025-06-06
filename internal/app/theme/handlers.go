@@ -65,7 +65,7 @@ func GetThemesWithFiltersHandler(service *ThemeService, w http.ResponseWriter, r
 	if totalPages == 0 && totalThemes > 0 {
 		totalPages = 1
 	}
-	var responseThemes []ThemeDetailsResponse
+	responseThemes := []ThemeDetailsResponse{}
 	for _, th := range themes {
 		responseThemes = append(responseThemes, ThemeDetailsResponse(th))
 	}
