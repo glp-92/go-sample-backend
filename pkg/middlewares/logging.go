@@ -23,6 +23,10 @@ func Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
 		w := newStatusResponseWriter(writer)
 		next.ServeHTTP(w, req)
-		log.Printf("%s - %s %s - %d", req.RemoteAddr, req.Method, req.URL.Path, w.statusCode)
+		requestPath := req.URL.Path
+		if req.URL.RawQuery != "" {
+			requestPath += "?" + req.URL.RawQuery
+		}
+		log.Printf("%s - %s %s - %d", req.RemoteAddr, req.Method, requestPath, w.statusCode)
 	})
 }
