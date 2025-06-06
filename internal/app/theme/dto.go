@@ -11,6 +11,18 @@ type CreateThemeRequest struct {
 	FeaturedImage string `json:"featuredImage"`
 }
 
+type ThemesPageableResponse struct {
+	Themes  []ThemeDetailsResponse `json:"themes"`
+	Total   int                    `json:"totalThemes"`
+	Page    int                    `json:"page"`
+	PerPage int                    `json:"perPage"`
+	Pages   int                    `json:"pages"`
+}
+
+type ThemesListResponse struct {
+	Themes []ThemeDetailsResponse `json:"themes"`
+}
+
 type UpdateThemeRequest struct {
 	Name          string `json:"name"`
 	Slug          string `json:"slug"`

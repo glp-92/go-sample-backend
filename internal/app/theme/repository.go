@@ -11,6 +11,8 @@ import (
 type ThemeRepository interface {
 	Save(theme Theme) error
 	Update(theme Theme) error
+	FindAll() ([]Theme, int, error)
+	FindPageable(page, perPage int, reverse bool) ([]Theme, int, error)
 	FindByID(id uuid.UUID) (*Theme, error)
 	DeleteById(id uuid.UUID) error
 }
@@ -38,6 +40,62 @@ func (r *MySQLThemeRepository) Update(theme Theme) error {
 			WHERE id = ?`
 	_, err := r.db.Exec(query, theme.Name, theme.Slug, theme.Excerpt, theme.FeaturedImage, theme.Id)
 	return err
+}
+
+func (r *MySQLThemeRepository) FindAll() ([]Theme, int, error) {
+	query := `
+        SELECT id, name, slug, excerpt, featured_image
+        FROM themes
+        ORDER BY name ASC`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	var themes []Theme
+	for rows.Next() {
+		var theme Theme
+		err := rows.Scan(&theme.Id, &theme.Name, &theme.Slug, &theme.Excerpt, &theme.FeaturedImage)
+		if err != nil {
+			return nil, 0, err
+		}
+		themes = append(themes, theme)
+	}
+	return themes, 0, nil
+}
+
+func (r *MySQLThemeRepository) FindPageable(page, perPage int, reverse bool) ([]Theme, int, error) {
+	offset := max((page-1)*perPage, 0)
+	orderDirection := "ASC"
+	if reverse {
+		orderDirection = "DESC"
+	}
+	query := fmt.Sprintf(`
+        SELECT id, name, slug, excerpt, featured_image
+        FROM themes
+        ORDER BY name %s
+        LIMIT ? OFFSET ?`, orderDirection)
+	rows, err := r.db.Query(query, perPage, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	var themes []Theme
+	for rows.Next() {
+		var theme Theme
+		err := rows.Scan(&theme.Id, &theme.Name, &theme.Slug, &theme.Excerpt, &theme.FeaturedImage)
+		if err != nil {
+			return nil, 0, err
+		}
+		themes = append(themes, theme)
+	}
+	countQuery := `SELECT COUNT(id) FROM themes`
+	var totalThemes int
+	err = r.db.QueryRow(countQuery).Scan(&totalThemes)
+	if err != nil {
+		return nil, 0, err
+	}
+	return themes, totalThemes, nil
 }
 
 func (r *MySQLThemeRepository) FindByID(id uuid.UUID) (*Theme, error) {

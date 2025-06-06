@@ -42,6 +42,14 @@ func (s *ThemeService) FindThemeById(id uuid.UUID) (ThemeDetailsResponse, error)
 	return response, nil
 }
 
+func (s *ThemeService) FindThemesPageable(page, perPage int, reverse bool, queryLen int) ([]Theme, int, error) {
+	if queryLen > 1 {
+		return s.repo.FindPageable(page, perPage, reverse)
+	} else {
+		return s.repo.FindAll()
+	}
+}
+
 func (s *ThemeService) DeleteThemeById(id uuid.UUID) error {
 	err := s.repo.DeleteById(id)
 	return err

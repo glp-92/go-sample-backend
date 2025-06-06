@@ -43,13 +43,13 @@ func (r *MySQLCategoryRepository) Update(category Category) error {
 }
 
 func (r *MySQLCategoryRepository) FindAll() ([]Category, int, error) {
-	query := fmt.Sprintf(`
+	query := `
         SELECT id, name, slug
         FROM categories
-        ORDER BY name ASC`)
+        ORDER BY name ASC`
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error al ejecutar la consulta de categorías paginadas: %w", err)
+		return nil, 0, err
 	}
 	defer rows.Close()
 	var categories []Category
@@ -57,7 +57,7 @@ func (r *MySQLCategoryRepository) FindAll() ([]Category, int, error) {
 		var category Category
 		err := rows.Scan(&category.Id, &category.Name, &category.Slug)
 		if err != nil {
-			return nil, 0, fmt.Errorf("error al escanear fila de categoría: %w", err)
+			return nil, 0, err
 		}
 		categories = append(categories, category)
 	}
@@ -65,10 +65,7 @@ func (r *MySQLCategoryRepository) FindAll() ([]Category, int, error) {
 }
 
 func (r *MySQLCategoryRepository) FindPageable(page, perPage int, reverse bool) ([]Category, int, error) {
-	offset := (page - 1) * perPage
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max((page-1)*perPage, 0)
 	orderDirection := "ASC"
 	if reverse {
 		orderDirection = "DESC"
@@ -80,7 +77,7 @@ func (r *MySQLCategoryRepository) FindPageable(page, perPage int, reverse bool) 
         LIMIT ? OFFSET ?`, orderDirection)
 	rows, err := r.db.Query(query, perPage, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error al ejecutar la consulta de categorías paginadas: %w", err)
+		return nil, 0, err
 	}
 	defer rows.Close()
 	var categories []Category
@@ -88,7 +85,7 @@ func (r *MySQLCategoryRepository) FindPageable(page, perPage int, reverse bool) 
 		var category Category
 		err := rows.Scan(&category.Id, &category.Name, &category.Slug)
 		if err != nil {
-			return nil, 0, fmt.Errorf("error al escanear fila de categoría: %w", err)
+			return nil, 0, err
 		}
 		categories = append(categories, category)
 	}
@@ -96,7 +93,7 @@ func (r *MySQLCategoryRepository) FindPageable(page, perPage int, reverse bool) 
 	var totalCategories int
 	err = r.db.QueryRow(countQuery).Scan(&totalCategories)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error al obtener el conteo total de categorías: %w", err)
+		return nil, 0, err
 	}
 	return categories, totalCategories, nil
 }
