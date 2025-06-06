@@ -38,6 +38,14 @@ func (s *CategoryService) FindCategoryById(id uuid.UUID) (CategoryDetailsRespons
 	return response, nil
 }
 
+func (s *CategoryService) FindCategoriesPageable(page, perPage int, reverse bool, queryLen int) ([]Category, int, error) {
+	if queryLen > 1 {
+		return s.repo.FindPageable(page, perPage, reverse)
+	} else {
+		return s.repo.FindAll()
+	}
+}
+
 func (s *CategoryService) DeleteCategoryById(id uuid.UUID) error {
 	err := s.repo.DeleteById(id)
 	return err

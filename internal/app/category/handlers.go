@@ -1,8 +1,10 @@
 package category
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 )
@@ -25,6 +27,55 @@ func CreateCategoryHandler(service *CategoryService, w http.ResponseWriter, r *h
 		Name:       category.Name,
 		Slug:       category.Slug,
 	})
+}
+
+func GetCategoriesWithFiltersHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	page := 1
+	perPage := 20
+	reverse := query.Get("reverse") == "true"
+	if pageStr := query.Get("page"); pageStr != "" {
+		p, err := strconv.Atoi(pageStr)
+		if err != nil || p < 1 {
+			http.Error(w, "invalid page parameter", http.StatusBadRequest)
+			return
+		}
+		page = p
+	}
+	if perPageStr := query.Get("perpage"); perPageStr != "" {
+		pp, err := strconv.Atoi(perPageStr)
+		if err != nil || pp < 1 {
+			http.Error(w, "invalid perpage parameter", http.StatusBadRequest)
+			return
+		}
+		perPage = pp
+	}
+	categories, totalCategories, err := service.FindCategoriesPageable(page, perPage, reverse, len(query))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "no categories found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal server error fetching categories", http.StatusBadRequest)
+		return
+	}
+	totalPages := (totalCategories + perPage - 1) / perPage
+	if totalPages == 0 && totalCategories > 0 {
+		totalPages = 1
+	}
+	var responseCategories []CategoryDetailsResponse
+	for _, cat := range categories {
+		responseCategories = append(responseCategories, CategoryDetailsResponse(cat))
+	}
+	response := CategoriesPageableResponse{
+		Categories: responseCategories,
+		Total:      totalCategories,
+		Page:       page,
+		PerPage:    perPage,
+		Pages:      totalPages,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func GetCategoryByIdHandler(service *CategoryService, w http.ResponseWriter, r *http.Request) {

@@ -13,6 +13,9 @@ func RegisterRoutes(db *sql.DB, authMiddlewares *auth.AuthMiddlewares) {
 	http.Handle("POST /categories", authMiddlewares.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		CreateCategoryHandler(service, w, r)
 	})))
+	http.HandleFunc("GET /categories", func(w http.ResponseWriter, r *http.Request) {
+		GetCategoriesWithFiltersHandler(service, w, r)
+	})
 	http.HandleFunc("GET /categories/{id}", func(w http.ResponseWriter, r *http.Request) {
 		GetCategoryByIdHandler(service, w, r)
 	})
